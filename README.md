@@ -39,7 +39,7 @@ Converts CSV file to Parquet format using given metadata.
 | CSV Delimeter | string | The separator used in the csv string. | ; |
 | ContainsHeaderRow    | bool                 | This flag tells the reader if there is a header row in the CSV string. Default is true. |  true |
 | TrimOutput           | bool                 | This flag tells the reader to trim whitespace from the beginning and ending of the field value when reading.              |  false |
-| Ignore quotes | bool | If value is set, uploaded file will be renamed to this. | true |
+| Ignore quotes | bool | This flag indicating if quotes should be ignored when parsing and treated like any other character. | true |
 | CultureInfo          | string               | The culture info to parse the file with, e.g. for decimal separators. InvariantCulture will be used by default. See list of cultures [here](https://msdn.microsoft.com/en-us/library/ee825488(v=cs.20).aspx); use the Language Culture Name. <br> NOTE: Due to an issue with the CsvHelpers library, all CSV tasks will use the culture info setting of the first CSV task in the process; you cannot use different cultures for reading and parsing CSV files in the same process.|   |
 | FileEncoding                                | Enum           | Encoding for the read content. By selecting 'Other' you can use any encoding. | |
 | EncodingInString                            | string         | The name of encoding to use. Required if the FileEncoding choice is 'Other'. A partial list of supported encoding names: https://msdn.microsoft.com/en-us/library/system.text.encoding.getencodings(v=vs.110).aspx | `iso-8859-1` |
