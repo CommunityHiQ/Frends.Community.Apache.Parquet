@@ -1,0 +1,8 @@
+{
+  "Tasks": 
+  [
+    {
+      "TaskMethod": "Frends.Community.Apache.Parquet.ParquetTasks.ConvertCsvToParquet"
+    }
+  ]
+}
