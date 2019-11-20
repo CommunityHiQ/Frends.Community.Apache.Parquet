@@ -1,4 +1,4 @@
-# Frends.Community.Azure.Blob
+# Frends.Community.Apache.Parquet
 
 FRENDS Community Task for Apache Parquet related operations.
 
