@@ -49,8 +49,8 @@ namespace Frends.Community.Apache.Parquet
     public class WriteParquetOptions
     {
         /// <summary>
-        /// Parquet files row group size. Batch size should be enough large
-        /// because perfomance later
+        /// Parquet files row group size. Batch size should be large enough
+        /// because of perfomance later
         /// </summary>
         [DefaultValue("5000")]
         public uint ParquetRowGroupSize { get; set; } = 5000;

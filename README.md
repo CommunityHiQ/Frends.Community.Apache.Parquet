@@ -39,7 +39,7 @@ Converts CSV file to Parquet format using given metadata.
 | CSV Delimeter | string | The separator used in the csv string. | ; |
 | ContainsHeaderRow    | bool                 | This flag tells the reader if there is a header row in the CSV string. Default is true. |  true |
 | TrimOutput           | bool                 | This flag tells the reader to trim whitespace from the beginning and ending of the field value when reading.              |  false |
-| Ignore quotes | bool | This flag indicating if quotes should be ignored when parsing and treated like any other character. | true |
+| Ignore quotes | bool | This flag indicates if quotes should be ignored when parsing and be treated like any other character. | true |
 | CultureInfo          | string               | The culture info to parse the file with, e.g. for decimal separators. InvariantCulture will be used by default. See list of cultures [here](https://msdn.microsoft.com/en-us/library/ee825488(v=cs.20).aspx); use the Language Culture Name. <br> NOTE: Due to an issue with the CsvHelpers library, all CSV tasks will use the culture info setting of the first CSV task in the process; you cannot use different cultures for reading and parsing CSV files in the same process.|   |
 | FileEncoding                                | Enum           | Encoding for the read content. By selecting 'Other' you can use any encoding. | |
 | EncodingInString                            | string         | The name of encoding to use. Required if the FileEncoding choice is 'Other'. A partial list of supported encoding names: https://msdn.microsoft.com/en-us/library/system.text.encoding.getencodings(v=vs.110).aspx | `iso-8859-1` |
@@ -48,14 +48,14 @@ Converts CSV file to Parquet format using given metadata.
 #### Parquet Options
 | Property | Type | Description | Example |
 | -------- | -------- | -------- | -------- |
-| Parquet row group size | number | Parquet files row group size. Batch size should be enough large because perfomance later. | 5000 |
+| Parquet row group size | number | Parquet files row group size. Batch size should be large enough because of perfomance later. | 5000 |
 | Parquet compression method | Enum | Parquet's compression level. GZip (smallest filesize) / Snappy / None | Gzip |
 
 ### Returns
 
 | Property | Type | Description | Example |
 | -------- | -------- | -------- | -------- |
-| Success | bool | Operation was successful true/false  | true|
+| Success | bool | Tells if the operation was successful (true/false)  | true|
 | StatusMessage | string | "ok" when Success==true. Otherwise returns error message |  "ok" |
 | ParquetFileName | string | Full path to the written file. (Same as Output filename parameter) | c:\temp\test.parquet |
 | Rows | number | Number of handled rows. | 124 |
