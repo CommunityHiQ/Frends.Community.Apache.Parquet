@@ -248,7 +248,8 @@ namespace Frends.Community.Apache.Parquet
         {
             if( System.String.IsNullOrEmpty(culture))
             {
-                return CultureInfo.InvariantCulture;
+                //return CultureInfo.InvariantCulture;
+                return new CultureInfo("fi-FI");
             } 
             else
             {

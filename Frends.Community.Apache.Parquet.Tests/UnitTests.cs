@@ -90,9 +90,9 @@ namespace Frends.Community.Apache.Parquet.Tests
                 Schema = @"[
     { ""name"": ""Id"", ""type"": ""int?""},
     {""name"": ""Time"", ""type"": ""datetime?"", ""format"": ""dd.MM.yyyy""},
-    {""name"": ""Decimal"", ""type"": ""decimal?""},
+    {""name"": ""Decimal"", ""type"": ""decimal?"", ""culture"": ""en-US""},
     { ""name"": ""Description"", ""type"": ""string?""},
-]" 
+]"
             };
 
             ParquetTasks.ConvertCsvToParquet(input, options, poptions, new System.Threading.CancellationToken());
@@ -132,7 +132,7 @@ namespace Frends.Community.Apache.Parquet.Tests
                 Schema = @"[
     {""name"": ""Id"", ""type"": ""int?""},
     {""name"": ""Time"", ""type"": ""datetime?"", ""format"": ""dd.MM.yyyy""},
-    {""name"": ""Decimal"", ""type"": ""decimal?""},
+    {""name"": ""Decimal"", ""type"": ""decimal?"", ""culture"": ""en-US""},
     {""name"": ""Description"", ""type"": ""string?""},
 ]"
             };
@@ -164,10 +164,10 @@ namespace Frends.Community.Apache.Parquet.Tests
         /// Now cultere is empty -> default should be CultureInfo.InvariantCulture
         /// </summary>
         [Test]
-        public void DecimalTestDot2()
+        public void DecimalTestDefault()
         {
             TestTools.RemoveOutputFile(_outputFileName);
-            RunDecimalTest("", _inputCsvFileNameDecDot);
+            RunDecimalTest("", _inputCsvFileNameDecComma);
             var hash = TestTools.MD5Hash(_outputFileName);
 
             Assert.AreEqual(12345.6789m, ReturnFirstDecimal(_outputFileName, 1));
