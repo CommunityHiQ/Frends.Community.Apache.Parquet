@@ -1,4 +1,6 @@
 using NUnit.Framework;
+using Parquet;
+using System.Linq;
 using System.IO;
 
 using Par = Parquet;
@@ -10,7 +12,9 @@ namespace Frends.Community.Apache.Parquet.Tests
         // File paths
         private static readonly string _basePath = Path.GetTempPath();
         private readonly string _inputCsvFileName = Path.Combine(_basePath, "testi-csv-" + Path.GetRandomFileName());
-        private readonly string _inputCsvFileName2 = Path.Combine(_basePath, "testi-csv-" + Path.GetRandomFileName());
+        private readonly string _inputCsvFileNameQuotes = Path.Combine(_basePath, "testi-quot-csv-" + Path.GetRandomFileName());
+        private readonly string _inputCsvFileNameDecDot = Path.Combine(_basePath, "testi-dec-csv-" + Path.GetRandomFileName());
+        private readonly string _inputCsvFileNameDecComma = Path.Combine(_basePath, "testi-dec2-csv-" + Path.GetRandomFileName());
         private readonly string _outputFileName = Path.Combine(_basePath, "testi-parquet-" + Path.GetRandomFileName());
 
         [SetUp]
@@ -24,7 +28,7 @@ namespace Frends.Community.Apache.Parquet.Tests
 4;1.1.2020;9.999;
 3;11.11.2011;1.2345;Viimeinen rivi
 ");
-            File.WriteAllText(_inputCsvFileName2, @"Id;Date;Decimal;Text
+            File.WriteAllText(_inputCsvFileNameQuotes, @"Id;Date;Decimal;Text
 1;01.10.2019;5.0;Testirivi 1
 1;15.04.2018;3.5;Testirivi 2 - ""pidempi teksti"" ja ääkkösiä
 ;;;Tyhjä rivi 1
@@ -32,25 +36,28 @@ namespace Frends.Community.Apache.Parquet.Tests
 3;11.11.2011;1.2345;Viimeinen rivi
 ");
 
+            File.WriteAllText(_inputCsvFileNameDecComma, @"Id;Decimal
+1;12345,6789;12345,6789;12345,6789
+2;2,3;2,3;2,3
+3;4,4;4,4;4,4
+");
+            File.WriteAllText(_inputCsvFileNameDecDot, @"Id;Decimal
+1;12345.6789;12345.6789;12345.6789
+2;2.3;2.3;2.3
+3;4.4;4.4;4.4
+");
         }
 
         [TearDown]
         public void TearDown()
         {
-            // remove test files
-            if (File.Exists(_inputCsvFileName))
+            // Remove all test files
+            foreach (var name in new string[] { _inputCsvFileName, _inputCsvFileNameQuotes, _inputCsvFileNameDecComma, _inputCsvFileNameDecDot, _outputFileName })
             {
-                File.Delete(_inputCsvFileName);
-            }
-
-            if (File.Exists(_inputCsvFileName2))
-            {
-                File.Delete(_inputCsvFileName2);
-            }
-
-            if (File.Exists(_outputFileName))
-            {
-                File.Delete(_outputFileName);
+                if (File.Exists(name))
+                {
+                    File.Delete(name);
+                }
             }
         }
 
@@ -60,6 +67,8 @@ namespace Frends.Community.Apache.Parquet.Tests
         [Test]
         public void WriteParquetFile()
         {
+            TestTools.RemoveOutputFile(_outputFileName);
+
             var options = new WriteCSVOptions()
             {
                 CsvDelimiter = ";",
@@ -98,10 +107,7 @@ namespace Frends.Community.Apache.Parquet.Tests
         [Test]
         public void WriteParquetFileQuotes()
         {
-            if (File.Exists(_outputFileName))
-            {
-                File.Delete(_outputFileName);
-            }
+            TestTools.RemoveOutputFile(_outputFileName);
 
             var options = new WriteCSVOptions()
             {
@@ -120,14 +126,14 @@ namespace Frends.Community.Apache.Parquet.Tests
 
             var input = new WriteInput()
             {
-                CsvFileName = _inputCsvFileName2,
+                CsvFileName = _inputCsvFileNameQuotes,
                 OuputFileName = _outputFileName,
                 ThrowExceptionOnErrorResponse = true,
                 Schema = @"[
-    { ""name"": ""Id"", ""type"": ""int?""},
+    {""name"": ""Id"", ""type"": ""int?""},
     {""name"": ""Time"", ""type"": ""datetime?"", ""format"": ""dd.MM.yyyy""},
     {""name"": ""Decimal"", ""type"": ""decimal?""},
-    { ""name"": ""Description"", ""type"": ""string?""},
+    {""name"": ""Description"", ""type"": ""string?""},
 ]"
             };
 
@@ -136,6 +142,130 @@ namespace Frends.Community.Apache.Parquet.Tests
             var hash = TestTools.MD5Hash(_outputFileName);
             Assert.IsTrue(hash == "c2d14b21c69fec284e20801cf43041f6", "File checksum didn't match.");
             
+        }
+
+
+        /// <summary>
+        /// Test case when decimal separator is dot. "."
+        /// </summary>
+        [Test]
+        public void DecimalTestDot1()
+        {
+            TestTools.RemoveOutputFile(_outputFileName);
+            RunDecimalTest("en-US", _inputCsvFileNameDecDot);
+            var hash = TestTools.MD5Hash(_outputFileName);
+            
+            Assert.AreEqual(12345.6789m, ReturnFirstDecimal(_outputFileName, 1));
+            Assert.AreEqual(12345.6789f, ReturnFirstDecimal(_outputFileName, 2));
+            Assert.AreEqual(12345.6789d, ReturnFirstDecimal(_outputFileName, 3));
+        }
+
+        /// <summary>
+        /// Now cultere is empty -> default should be CultureInfo.InvariantCulture
+        /// </summary>
+        [Test]
+        public void DecimalTestDot2()
+        {
+            TestTools.RemoveOutputFile(_outputFileName);
+            RunDecimalTest("", _inputCsvFileNameDecDot);
+            var hash = TestTools.MD5Hash(_outputFileName);
+
+            Assert.AreEqual(12345.6789m, ReturnFirstDecimal(_outputFileName, 1));
+            Assert.AreEqual(12345.6789f, ReturnFirstDecimal(_outputFileName, 2));
+            Assert.AreEqual(12345.6789d, ReturnFirstDecimal(_outputFileName, 3));
+        }
+
+        /// <summary>
+        /// Test case when decimal separator is comma. ","
+        /// </summary>
+        [Test]
+        public void DecimalTestComma()
+        {
+            TestTools.RemoveOutputFile(_outputFileName);
+            RunDecimalTest("fi-FI", _inputCsvFileNameDecComma);
+            var hash = TestTools.MD5Hash(_outputFileName);
+
+            Assert.AreEqual(12345.6789m, ReturnFirstDecimal(_outputFileName, 1));
+            Assert.AreEqual(12345.6789f, ReturnFirstDecimal(_outputFileName, 2));
+            Assert.AreEqual(12345.6789d, ReturnFirstDecimal(_outputFileName, 3));
+        }
+
+        /// <summary>
+        /// Reads first decimal from first group and given column
+        /// </summary>
+        /// <param name="parquetFilePath">Full filepath</param>
+        /// <param name="columnIndex">Column index 0...n</param>
+        /// <returns></returns>
+        
+        private object ReturnFirstDecimal(string parquetFilePath, int columnIndex)
+        { 
+            var encoding = Definitions.GetEncoding(FileEncoding.UTF8, false, "");
+
+            using (var filereader = File.Open(parquetFilePath, FileMode.Open, FileAccess.Read))
+            {
+                var options = new ParquetOptions { TreatByteArrayAsString = true };
+                var parquetReader = new ParquetReader(filereader, options);
+
+                Par.Data.DataField[] dataFields = parquetReader.Schema.GetDataFields();
+
+                using (ParquetRowGroupReader groupReader = parquetReader.OpenRowGroupReader(0))
+                {
+                    Par.Data.DataColumn[] columns = dataFields.Select(groupReader.ReadColumn).ToArray();
+                    Par.Data.DataColumn decimalColumn = columns[columnIndex];
+
+                    switch (dataFields[columnIndex].DataType)
+                    {
+                        case Par.Data.DataType.Decimal:
+                            decimal?[] dec = (decimal?[])decimalColumn.Data;
+                            return dec[0];
+                        case Par.Data.DataType.Float:
+                            float?[] flo = (float?[])decimalColumn.Data;
+                            return flo[0];
+                        case Par.Data.DataType.Double:
+                            double?[] dou = (double?[])decimalColumn.Data;
+                            return dou[0];
+                        default:
+                            throw new System.Exception("Unknow datatype:" + dataFields[columnIndex].DataType);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Runs decimal tests using static schema and given input
+        /// </summary>
+        /// <param name="decimalType"></param>
+        /// <param name="inputFileName"></param>
+        private void RunDecimalTest(string cultureStr, string inputFileName)
+        {
+            var options = new WriteCSVOptions()
+            {
+                CsvDelimiter = ";",
+                FileEncoding = FileEncoding.UTF8,
+                EnableBom = false,
+                EncodingInString = ""
+            };
+
+            var poptions = new WriteParquetOptions()
+            {
+                ParquetRowGroupSize = 5,
+                ParquetCompressionMethod = CompressionType.Snappy
+            };
+
+            var input = new WriteInput()
+            {
+                CsvFileName = inputFileName,
+                OuputFileName = _outputFileName,
+                ThrowExceptionOnErrorResponse = true,
+                Schema = @"[
+    {""name"": ""Id"", ""type"": ""int?""},
+    {""name"": ""Decimal"", ""type"": ""decimal?""" + (System.String.IsNullOrEmpty(cultureStr) ? "}" : @",""culture"": """ + cultureStr + @"""}") + @",
+    {""name"": ""Float"", ""type"": ""float?""" + (System.String.IsNullOrEmpty(cultureStr) ? "}" : @",""culture"": """ + cultureStr + @"""}") + @",
+    {""name"": ""Double"", ""type"": ""double?""" + (System.String.IsNullOrEmpty(cultureStr) ? "}" : @",""culture"": """ + cultureStr + @"""}") + @",
+]"
+            };
+
+            ParquetTasks.ConvertCsvToParquet(input, options, poptions, new System.Threading.CancellationToken());
         }
     }
 }
