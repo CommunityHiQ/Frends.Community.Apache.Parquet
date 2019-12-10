@@ -2,22 +2,13 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net471</TargetFrameworks>
-    <Copyright>HiQ 2019</Copyright>
-    <Version>1.0.4</Version>
-    <Company>HiQ</Company>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Company>HiQ Finland</Company>
     <Authors>HiQ Finland</Authors>
+    <Description>FRENDS Community Apache Parquet Task</Description>
+    <Version>1.0.6</Version>
   </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>bin\Debug\Frends.Community.Apache.Parquet.xml</DocumentationFile>
-    <OutputPath>bin\$(Configuration)</OutputPath>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DocumentationFile>bin\Release\Frends.Community.Apache.Parquet.xml</DocumentationFile>
-    <OutputPath>bin\$(Configuration)</OutputPath>
-  </PropertyGroup>
-  
+ 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="4.5.0" />

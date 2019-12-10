@@ -24,10 +24,17 @@ namespace Frends.Community.Apache.Parquet
             {
                 string name = element.Value<string>("name");
                 string format = element.Value<string>("format");
+                string culture = element.Value<string>("culture");
 
                 if (String.IsNullOrWhiteSpace(format))
                 {
                     format = "";
+                }
+
+                // Culture overwrites format. (decimals, floats and doubles)
+                if (!String.IsNullOrWhiteSpace(culture))
+                {
+                    format = culture;
                 }
 
                 _config[name] = format;

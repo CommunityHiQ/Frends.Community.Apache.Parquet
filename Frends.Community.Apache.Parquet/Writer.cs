@@ -34,13 +34,13 @@ namespace Frends.Community.Apache.Parquet
                             rg.WriteColumn(new DataColumn(fields[i], GetDateTimeArray(csvArr[i].Take((int)dataLen).ToArray(), config.GetConfigValue(fields[i].Name))));
                             break;
                         case DataType.Decimal:
-                            rg.WriteColumn(new DataColumn(fields[i], GetDecimalArray(csvArr[i].Take((int)dataLen))));
+                            rg.WriteColumn(new DataColumn(fields[i], GetDecimalArray(csvArr[i].Take((int)dataLen), config.GetConfigValue(fields[i].Name))));
                             break;
                         case DataType.Double:
-                            rg.WriteColumn(new DataColumn(fields[i], GetDoubleArray(csvArr[i].Take((int)dataLen))));
+                            rg.WriteColumn(new DataColumn(fields[i], GetDoubleArray(csvArr[i].Take((int)dataLen), config.GetConfigValue(fields[i].Name))));
                             break;
                         case DataType.Float:
-                            rg.WriteColumn(new DataColumn(fields[i], GetFloatArray(csvArr[i].Take((int)dataLen))));
+                            rg.WriteColumn(new DataColumn(fields[i], GetFloatArray(csvArr[i].Take((int)dataLen), config.GetConfigValue(fields[i].Name))));
                             break;
                         case DataType.Int16:
                             rg.WriteColumn(new DataColumn(fields[i], GetInt16Array(csvArr[i].Take((int)dataLen))));
@@ -99,7 +99,7 @@ namespace Frends.Community.Apache.Parquet
             return boolArr;
         }
 
-        private static float?[] GetFloatArray(IEnumerable<string> strList)
+        private static float?[] GetFloatArray(IEnumerable<string> strList, string culture)
         {
             float?[] ftlArr = new float?[strList.Count()];
 
@@ -111,7 +111,7 @@ namespace Frends.Community.Apache.Parquet
                 if (!String.IsNullOrWhiteSpace(ftlStr))
                 {
                     // Decimal dot is .
-                    ftl = float.Parse(ftlStr, System.Globalization.CultureInfo.InvariantCulture);
+                    ftl = float.Parse(ftlStr, GetCultureInfo(culture));
                 }
                 ftlArr[index] = ftl;
                 index++;
@@ -147,7 +147,7 @@ namespace Frends.Community.Apache.Parquet
             return dtArr;
         }
 
-        private static decimal?[] GetDecimalArray(IEnumerable<string> strList)
+        private static decimal?[] GetDecimalArray(IEnumerable<string> strList, string culture)
         {
             decimal?[] decArr = new decimal?[strList.Count()];
 
@@ -158,7 +158,7 @@ namespace Frends.Community.Apache.Parquet
                 // Decimal dot is .
                 if (!String.IsNullOrWhiteSpace(decStr))
                 {
-                    dec = decimal.Parse(decStr, System.Globalization.CultureInfo.InvariantCulture);
+                    dec = decimal.Parse(decStr, GetCultureInfo(culture));
                 }
                 decArr[index] = dec;
                 index++;
@@ -166,9 +166,11 @@ namespace Frends.Community.Apache.Parquet
             return decArr;
         }
 
-        private static double?[] GetDoubleArray(IEnumerable<string> strList)
+        private static double?[] GetDoubleArray(IEnumerable<string> strList, string culture)
         {
             double?[] dblArr = new double?[strList.Count()];
+
+            
 
             int index = 0;
             foreach (var dblStr in strList)
@@ -177,7 +179,7 @@ namespace Frends.Community.Apache.Parquet
                 // Decimal dot is .
                 if (!String.IsNullOrWhiteSpace(dblStr))
                 {
-                    dbl = double.Parse(dblStr, System.Globalization.CultureInfo.InvariantCulture);
+                    dbl = double.Parse(dblStr, GetCultureInfo(culture));
                 }
                 dblArr[index] = dbl;
                 index++;
@@ -239,6 +241,20 @@ namespace Frends.Community.Apache.Parquet
                 index++;
             }
             return intArr;
+        }
+
+
+        private static CultureInfo GetCultureInfo(string culture)
+        {
+            if( System.String.IsNullOrEmpty(culture))
+            {
+                //return CultureInfo.InvariantCulture;
+                return new CultureInfo("fi-FI");
+            } 
+            else
+            {
+                return new CultureInfo(culture);
+            }
         }
     }
 }

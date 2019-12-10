@@ -21,5 +21,18 @@ namespace Frends.Community.Apache.Parquet.Tests
 
             return BitConverter.ToString(hash).Replace("-", "").ToLower();
         }
+
+        /// <summary>
+        /// Removes  file if it exists
+        /// </summary>
+        /// <param name="filepath">Full filepath</param>
+        /// 
+        public static void RemoveOutputFile(string filepath)
+        {
+            if (File.Exists(filepath))
+            {
+                File.Delete(filepath);
+            }
+        }
     }
 }
