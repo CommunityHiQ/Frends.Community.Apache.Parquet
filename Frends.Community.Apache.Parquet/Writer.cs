@@ -19,7 +19,7 @@ namespace Frends.Community.Apache.Parquet
         /// <param name="writer">ParquetWriter</param>
         /// <param name="fields">Field structure</param>
         /// <param name="config">Config structure</param>
-        public static void WriteGroup(string[][] csvArr, uint dataLen, ParquetWriter writer, List<DataField> fields, Config config)
+        public static void WriteGroup(string[][] csvArr, long dataLen, ParquetWriter writer, List<DataField> fields, Config config)
         {
             using (ParquetRowGroupWriter rg = writer.CreateRowGroup())
             {

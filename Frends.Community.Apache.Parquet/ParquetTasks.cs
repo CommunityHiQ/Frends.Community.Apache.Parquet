@@ -50,10 +50,28 @@ namespace Frends.Community.Apache.Parquet
                 var schema = new Schema(dataFields);
                 int colCount = schema.Fields.Count;
 
-                
+                // Decrease ParquetRowGroupSize if possible
+                var fileInfo = new FileInfo(input.CsvFileName);
+                long csvFileSive = fileInfo.Length;
+
+                long parquetRowGroupSize = parquetOptions.ParquetRowGroupSize;
+
+                if( parquetRowGroupSize < 1 )
+                {
+                    throw new ArgumentException("ParguetRowGroupSize must be greater than 0.");
+                }
+
+                // Maximum rows of csv file: size of the file
+                if (parquetRowGroupSize  > fileInfo.Length)
+                {
+                    parquetRowGroupSize = fileInfo.Length;
+                }
+
+
+
                 // Open file and read csv
                 // CSV is row-oriented, Parquet is column-oriented.
-                                
+
                 using (var reader = new StreamReader(input.CsvFileName, encoding))
                 {
                     using (var csv = new CsvReader(reader, csvConfiguration))
@@ -75,10 +93,10 @@ namespace Frends.Community.Apache.Parquet
                                 string[][] csvArr = new string[colCount][];
                                 for (int i = 0; i < colCount; i++)
                                 {
-                                     csvArr[i] = new string[parquetOptions.ParquetRowGroupSize];
+                                    csvArr[i] = new string[parquetRowGroupSize];
                                 }
-                                                                
-                                uint dataIndex = 0;
+
+                                long dataIndex = 0;
 
                                 // Read csv rows
                                 while (csv.Read())
@@ -92,7 +110,7 @@ namespace Frends.Community.Apache.Parquet
                                     dataIndex++;
 
                                     // Write data if data structure is full
-                                    if (dataIndex >= parquetOptions.ParquetRowGroupSize)
+                                    if (dataIndex >= parquetRowGroupSize)
                                     {
                                         Writer.WriteGroup(csvArr, dataIndex, parquetWriter, dataFields, config);
                                         dataIndex = 0;

@@ -267,5 +267,47 @@ namespace Frends.Community.Apache.Parquet.Tests
 
             ParquetTasks.ConvertCsvToParquet(input, options, poptions, new System.Threading.CancellationToken());
         }
+
+
+        /// <summary>
+        /// Simple csv -> parquet test case.
+        /// </summary>
+        [Test]
+        public void WriteParquetFileMaxMemory()
+        {
+            TestTools.RemoveOutputFile(_outputFileName);
+
+            var options = new WriteCSVOptions()
+            {
+                CsvDelimiter = ";",
+                FileEncoding = FileEncoding.UTF8,
+                EnableBom = false,
+                EncodingInString = ""
+            };
+
+            var poptions = new WriteParquetOptions()
+            {
+                ParquetRowGroupSize = 100000000,
+                ParquetCompressionMethod = CompressionType.Gzip
+            };
+
+            var input = new WriteInput()
+            {
+                CsvFileName = _inputCsvFileName,
+                OuputFileName = _outputFileName,
+                ThrowExceptionOnErrorResponse = true,
+                Schema = @"[
+    { ""name"": ""Id"", ""type"": ""int?""},
+    {""name"": ""Time"", ""type"": ""datetime?"", ""format"": ""dd.MM.yyyy""},
+    {""name"": ""Decimal"", ""type"": ""decimal?"", ""culture"": ""en-US""},
+    { ""name"": ""Description"", ""type"": ""string?""},
+]"
+            };
+
+            ParquetTasks.ConvertCsvToParquet(input, options, poptions, new System.Threading.CancellationToken());
+
+            var hash = TestTools.MD5Hash(_outputFileName);
+            Assert.IsTrue(hash == "2b2ea410911658f3fbfa36ec7938d27e", "File checksum didn't match.");
+        }
     }
 }

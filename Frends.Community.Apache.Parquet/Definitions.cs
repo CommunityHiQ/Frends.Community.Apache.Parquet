@@ -53,7 +53,7 @@ namespace Frends.Community.Apache.Parquet
         /// because of perfomance later
         /// </summary>
         [DefaultValue("5000")]
-        public uint ParquetRowGroupSize { get; set; } = 5000;
+        public long ParquetRowGroupSize { get; set; } = 5000;
 
         /// <summary>
         /// Parquet Compression type: None / Snappy / GZip (smallest filesize)
