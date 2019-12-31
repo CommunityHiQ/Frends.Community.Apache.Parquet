@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Parquet;
+using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
-using Parquet;
 
 #pragma warning disable CS1591
 
@@ -44,7 +44,7 @@ namespace Frends.Community.Apache.Parquet
 
     public enum FileEncoding { UTF8, ANSI, ASCII, Unicode, Other }
 
-    public enum CompressionType { Gzip, Snappy, None}
+    public enum CompressionType { Gzip, Snappy, None }
 
     public class WriteParquetOptions
     {
@@ -53,13 +53,19 @@ namespace Frends.Community.Apache.Parquet
         /// because of perfomance later
         /// </summary>
         [DefaultValue("5000")]
-        public uint ParquetRowGroupSize { get; set; } = 5000;
+        public long ParquetRowGroupSize { get; set; } = 5000;
 
         /// <summary>
         /// Parquet Compression type: None / Snappy / GZip (smallest filesize)
         /// </summary>
         [DefaultValue(CompressionType.Gzip)]
         public CompressionType ParquetCompressionMethod { get; set; } = CompressionType.Gzip;
+
+        /// <summary>
+        /// Does task read whole file and count rows before processing
+        /// </summary>
+        [DefaultValue(false)]
+        public bool CountRowsBeforeProcessing { get; set; } = false;
     }
 
     public class WriteCSVOptions
@@ -76,7 +82,7 @@ namespace Frends.Community.Apache.Parquet
         /// </summary>
         [DefaultValue("true")]
         public bool ContainsHeaderRow { get; set; } = true;
-        
+
         /// <summary>
         /// This flag tells the reader to trim whitespace from the beginning and ending of the field value when reading.
         /// </summary>

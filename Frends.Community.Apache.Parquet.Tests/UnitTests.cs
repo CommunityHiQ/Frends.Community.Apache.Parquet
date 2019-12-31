@@ -1,8 +1,8 @@
 using NUnit.Framework;
 using Parquet;
-using System.Linq;
+using System;
 using System.IO;
-
+using System.Linq;
 using Par = Parquet;
 
 namespace Frends.Community.Apache.Parquet.Tests
@@ -15,7 +15,16 @@ namespace Frends.Community.Apache.Parquet.Tests
         private readonly string _inputCsvFileNameQuotes = Path.Combine(_basePath, "testi-quot-csv-" + Path.GetRandomFileName());
         private readonly string _inputCsvFileNameDecDot = Path.Combine(_basePath, "testi-dec-csv-" + Path.GetRandomFileName());
         private readonly string _inputCsvFileNameDecComma = Path.Combine(_basePath, "testi-dec2-csv-" + Path.GetRandomFileName());
+        private readonly string _inputCsvFileNameLarge = Path.Combine(_basePath, "testi-large-csv-" + Path.GetRandomFileName());
         private readonly string _outputFileName = Path.Combine(_basePath, "testi-parquet-" + Path.GetRandomFileName());
+
+        private const string _commonSchema = @"[
+    { ""name"": ""Id"", ""type"": ""int?""},
+    {""name"": ""Time"", ""type"": ""datetime?"", ""format"": ""dd.MM.yyyy""},
+    {""name"": ""Decimal"", ""type"": ""decimal?"", ""culture"": ""en-US""},
+    { ""name"": ""Description"", ""type"": ""string?""},
+]";
+
 
         [SetUp]
         public void Setup()
@@ -52,7 +61,7 @@ namespace Frends.Community.Apache.Parquet.Tests
         public void TearDown()
         {
             // Remove all test files
-            foreach (var name in new string[] { _inputCsvFileName, _inputCsvFileNameQuotes, _inputCsvFileNameDecComma, _inputCsvFileNameDecDot, _outputFileName })
+            foreach (var name in new string[] { _inputCsvFileName, _inputCsvFileNameLarge, _inputCsvFileNameQuotes, _inputCsvFileNameDecComma, _inputCsvFileNameDecDot, _outputFileName })
             {
                 if (File.Exists(name))
                 {
@@ -72,7 +81,7 @@ namespace Frends.Community.Apache.Parquet.Tests
             var options = new WriteCSVOptions()
             {
                 CsvDelimiter = ";",
-                FileEncoding = FileEncoding.UTF8, 
+                FileEncoding = FileEncoding.UTF8,
                 EnableBom = false,
                 EncodingInString = ""
             };
@@ -83,16 +92,12 @@ namespace Frends.Community.Apache.Parquet.Tests
                 ParquetCompressionMethod = CompressionType.Gzip
             };
 
-            var input = new WriteInput() 
+            var input = new WriteInput()
             {
-                CsvFileName = _inputCsvFileName, OuputFileName = _outputFileName, 
-                ThrowExceptionOnErrorResponse = true, 
-                Schema = @"[
-    { ""name"": ""Id"", ""type"": ""int?""},
-    {""name"": ""Time"", ""type"": ""datetime?"", ""format"": ""dd.MM.yyyy""},
-    {""name"": ""Decimal"", ""type"": ""decimal?"", ""culture"": ""en-US""},
-    { ""name"": ""Description"", ""type"": ""string?""},
-]"
+                CsvFileName = _inputCsvFileName,
+                OuputFileName = _outputFileName,
+                ThrowExceptionOnErrorResponse = true,
+                Schema = _commonSchema
             };
 
             ParquetTasks.ConvertCsvToParquet(input, options, poptions, new System.Threading.CancellationToken());
@@ -129,19 +134,14 @@ namespace Frends.Community.Apache.Parquet.Tests
                 CsvFileName = _inputCsvFileNameQuotes,
                 OuputFileName = _outputFileName,
                 ThrowExceptionOnErrorResponse = true,
-                Schema = @"[
-    {""name"": ""Id"", ""type"": ""int?""},
-    {""name"": ""Time"", ""type"": ""datetime?"", ""format"": ""dd.MM.yyyy""},
-    {""name"": ""Decimal"", ""type"": ""decimal?"", ""culture"": ""en-US""},
-    {""name"": ""Description"", ""type"": ""string?""},
-]"
+                Schema = _commonSchema
             };
 
             ParquetTasks.ConvertCsvToParquet(input, options, poptions, new System.Threading.CancellationToken());
 
             var hash = TestTools.MD5Hash(_outputFileName);
             Assert.IsTrue(hash == "c2d14b21c69fec284e20801cf43041f6", "File checksum didn't match.");
-            
+
         }
 
 
@@ -154,7 +154,7 @@ namespace Frends.Community.Apache.Parquet.Tests
             TestTools.RemoveOutputFile(_outputFileName);
             RunDecimalTest("en-US", _inputCsvFileNameDecDot);
             var hash = TestTools.MD5Hash(_outputFileName);
-            
+
             Assert.AreEqual(12345.6789m, ReturnFirstDecimal(_outputFileName, 1));
             Assert.AreEqual(12345.6789f, ReturnFirstDecimal(_outputFileName, 2));
             Assert.AreEqual(12345.6789d, ReturnFirstDecimal(_outputFileName, 3));
@@ -196,9 +196,9 @@ namespace Frends.Community.Apache.Parquet.Tests
         /// <param name="parquetFilePath">Full filepath</param>
         /// <param name="columnIndex">Column index 0...n</param>
         /// <returns></returns>
-        
+
         private object ReturnFirstDecimal(string parquetFilePath, int columnIndex)
-        { 
+        {
             var encoding = Definitions.GetEncoding(FileEncoding.UTF8, false, "");
 
             using (var filereader = File.Open(parquetFilePath, FileMode.Open, FileAccess.Read))
@@ -266,6 +266,106 @@ namespace Frends.Community.Apache.Parquet.Tests
             };
 
             ParquetTasks.ConvertCsvToParquet(input, options, poptions, new System.Threading.CancellationToken());
+        }
+
+        /// <summary>
+        /// Test case for counting rows before processing
+        /// </summary>
+        [Test]
+        public void WriteParquetFileCountRows()
+        {
+            TestTools.RemoveOutputFile(_outputFileName);
+
+            var options = new WriteCSVOptions()
+            {
+                CsvDelimiter = ";",
+                FileEncoding = FileEncoding.UTF8,
+                EnableBom = false,
+                EncodingInString = ""
+            };
+
+            var poptions = new WriteParquetOptions()
+            {
+                ParquetRowGroupSize = 5000,
+                ParquetCompressionMethod = CompressionType.Gzip,
+                CountRowsBeforeProcessing = true
+            };
+
+            var input = new WriteInput()
+            {
+                CsvFileName = _inputCsvFileName,
+                OuputFileName = _outputFileName,
+                ThrowExceptionOnErrorResponse = true,
+                Schema = _commonSchema
+            };
+
+            ParquetTasks.ConvertCsvToParquet(input, options, poptions, new System.Threading.CancellationToken());
+
+            var hash = TestTools.MD5Hash(_outputFileName);
+            Assert.IsTrue(hash == "2b2ea410911658f3fbfa36ec7938d27e", "File checksum didn't match.");
+        }
+
+
+        /// <summary>
+        /// Simple csv -> parquet test case with large group size
+        /// </summary>
+        [Test]
+        public void WriteParquetFileMaxMemory()
+        {
+            TestTools.RemoveOutputFile(_outputFileName);
+
+            string schema = CreateLargeCSVFile(_inputCsvFileNameLarge, 1000000);
+
+            var options = new WriteCSVOptions()
+            {
+                CsvDelimiter = ";",
+                FileEncoding = FileEncoding.UTF8,
+                EnableBom = false,
+                EncodingInString = ""
+            };
+
+            var poptions = new WriteParquetOptions()
+            {
+                ParquetRowGroupSize = 100000000,
+                ParquetCompressionMethod = CompressionType.Gzip
+            };
+
+            var input = new WriteInput()
+            {
+                CsvFileName = _inputCsvFileNameLarge,
+                OuputFileName = _outputFileName,
+                ThrowExceptionOnErrorResponse = true,
+                Schema = schema
+            };
+
+            ParquetTasks.ConvertCsvToParquet(input, options, poptions, new System.Threading.CancellationToken());
+
+            var hash = TestTools.MD5Hash(_outputFileName);
+            Assert.IsTrue(hash == "a8dfd474f261281dac5bedec356b52b3", "File checksum didn't match.");
+        }
+
+
+        /// <summary>
+        /// Creates CSV file and returns JSON schema for Parquet
+        /// </summary>
+        /// <param name="fileName">CSV filename, full path</param>
+        /// <param name="rows">Number of rows</param>
+        /// <returns>JSON schema of the csv file</returns>
+        private string CreateLargeCSVFile(string fileName, int rows)
+        {
+            using (StreamWriter outputFile = new StreamWriter(fileName))
+            {
+                outputFile.WriteLine("Id;Date;Decimal;Text");
+                for (int i = 0; i < rows; i++)
+                {
+                    double dec1 = (i + 1.0) + (i % 100) / 100.0;
+                    outputFile.WriteLine((i + 1) + ";" + DateTime.Now.ToString("dd.MM.yyyy") + ";" +
+                        dec1.ToString(System.Globalization.CultureInfo.InvariantCulture) + ";" +
+                        "Testirivi " + (i + 1) + " ja jotain tekstiä.");
+                }
+            }
+
+            return _commonSchema;
         }
     }
 }
