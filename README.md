@@ -27,7 +27,7 @@ Converts CSV file to Parquet format using given metadata.
 #### Input
 | Property | Type | Description | Example |
 | -------- | -------- | -------- | -------- |
-| Schema | json | Schema for CSV data. Types: boolean, datetime, datetimeoffset, decimal, double, float, int16, int, int32, int64, string and unspecified where ? means nullable column. Special characters are not allowed in column names. (see Parquet column name restrictions) | [  {"name": "Id", "type": "int"}, {"name": "Name", "type": "string"}, {"name": "Desc", "type": "string?"}, {"name": "number", "type": "decimal?", "culture": "en-US"} ] |
+| Schema | json | Schema for CSV data. Types: boolean, datetime, datetimeoffset, decimal, double, float, int16, int, int32, int64, string and unspecified where ? means nullable column. Special characters are not allowed in column names. (Eg. characters '. ,;{}()=' have proven to be problematic.) | [  {"name": "Id", "type": "int"}, {"name": "Name", "type": "string"}, {"name": "Desc", "type": "string?"}, {"name": "number", "type": "decimal?", "culture": "en-US"} ] |
 | CSV Filename | string |  Full path to the file to be read. | c:\temp\test.csv |
 | Output Filename | string |Full path to the file to be write. | 'UseDevelopmentStorage=true' |
 | Throw exception on error response | bool | Do not handle exceptions if set true. Otherwise catch exception and return error message. | true |
@@ -109,3 +109,4 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 | 1.0.5 |Decimal separator format added decimals, doubles and floats |
 | 1.0.6 |Set default culture to "fi-FI" for decimal separator |
 | 1.0.7 |Memory allocation optimized. A new option to analyze maximum Parquet row group size added. |
+| 1.0.8 |Standard datatypes (non-nullable) are now supported. |

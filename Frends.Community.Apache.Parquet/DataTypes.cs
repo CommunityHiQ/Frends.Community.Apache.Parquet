@@ -46,5 +46,73 @@ namespace Frends.Community.Apache.Parquet
                     throw new ArgumentOutOfRangeException(str);
             }
         }
+
+        /// <summary>
+        /// Returns array of specific type
+        /// </summary>
+        /// <param name="field">Datatype</param>
+        /// <param name="groupSize">Array size</param>
+        /// <returns>Array</returns>
+        public static Object GetCSVColumnStorage(DataField field, long groupSize)
+        {
+            DataType type = field.DataType;
+
+            if (field.HasNulls)
+            {
+                switch (field.DataType)
+                {
+                    case DataType.Boolean:
+                        return new bool?[groupSize];
+                    case DataType.DateTimeOffset:
+                        return new DateTimeOffset?[groupSize];
+                    case DataType.Decimal:
+                        return new decimal?[groupSize];
+                    case DataType.Double:
+                        return new double?[groupSize];
+                    case DataType.Float:
+                        return new float?[groupSize];
+                    case DataType.Int16:
+                        return new Int16?[groupSize];
+                    case DataType.Int32:
+                        return new Int32?[groupSize];
+                    case DataType.Int64:
+                        return new Int64?[groupSize];
+                    //case "int96":
+                    // this is for datetimes. Use datetimeoffset
+                    case DataType.String:
+                        return new string[groupSize];
+                    default:
+                        throw new ArgumentOutOfRangeException(field.DataType.ToString());
+                }
+            }
+            else
+            {
+                switch (field.DataType)
+                {
+                    case DataType.Boolean:
+                        return new bool[groupSize];
+                    case DataType.DateTimeOffset:
+                        return new DateTimeOffset[groupSize];
+                    case DataType.Decimal:
+                        return new decimal[groupSize];
+                    case DataType.Double:
+                        return new double[groupSize];
+                    case DataType.Float:
+                        return new float[groupSize];
+                    case DataType.Int16:
+                        return new Int16[groupSize];
+                    case DataType.Int32:
+                        return new Int32[groupSize];
+                    case DataType.Int64:
+                        return new Int64[groupSize];
+                    //case "int96":
+                    // this is for datetimes. Use datetimeoffset
+                    case DataType.String:
+                        return new string[groupSize];
+                    default:
+                        throw new ArgumentOutOfRangeException(field.DataType.ToString());
+                }
+            }
+        }
     }
 }
