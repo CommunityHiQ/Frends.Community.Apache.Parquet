@@ -27,7 +27,7 @@ Converts CSV file to Parquet format using given metadata.
 #### Input
 | Property | Type | Description | Example |
 | -------- | -------- | -------- | -------- |
-| Schema | json | Schema for CSV data. Types: boolean, datetime, datetimeoffset, decimal, double, float, int16, int, int32, int64, string and unspecified where ? means nullable column.  | [  {"name": "Id", "type": "int"}, {"name": "Name", "type": "string"}, {"name": "Desc", "type": "string?"}, {"name": "number", "type": "decimal?", "culture": "en-US"} ] |
+| Schema | json | Schema for CSV data. Types: boolean, datetime, datetimeoffset, decimal, double, float, int16, int, int32, int64, string and unspecified where ? means nullable column. Special characters are not allowed in column names. (see Parquet column name restrictions) | [  {"name": "Id", "type": "int"}, {"name": "Name", "type": "string"}, {"name": "Desc", "type": "string?"}, {"name": "number", "type": "decimal?", "culture": "en-US"} ] |
 | CSV Filename | string |  Full path to the file to be read. | c:\temp\test.csv |
 | Output Filename | string |Full path to the file to be write. | 'UseDevelopmentStorage=true' |
 | Throw exception on error response | bool | Do not handle exceptions if set true. Otherwise catch exception and return error message. | true |
@@ -51,6 +51,7 @@ Note: Decimals, floats and doubles have "fi-FI" default culture. Decimal separat
 | -------- | -------- | -------- | -------- |
 | Parquet row group size | number | Parquet files row group size. Batch size should be large enough because of perfomance later. | 5000 |
 | Parquet compression method | Enum | Parquet's compression level. GZip (smallest filesize) / Snappy / None | Gzip |
+| Count rows before processing | bool | Count CSV file rows before processing. If row count if smaller than Parquet row group size, decrease group size. Because this operation reads CSV file before processing, CSV file is processed two times. | false |
 
 ### Returns
 
@@ -86,7 +87,7 @@ Run tests
 
 Create a nuget package
 
-`dotnet pack`
+`dotnet pack -c Release`
 
 Contributing
 ============
