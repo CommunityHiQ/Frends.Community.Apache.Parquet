@@ -108,3 +108,4 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 | 1.0.4 |Initial version - converts CSV file to Parquet file |
 | 1.0.5 |Decimal separator format added decimals, doubles and floats |
 | 1.0.6 |Set default culture to "fi-FI" for decimal separator |
+| 1.0.7 |Memory allocation optimized. A new option to analyze maximum Parquet row group size added. |
