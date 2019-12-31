@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Parquet;
+using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
-using Parquet;
 
 #pragma warning disable CS1591
 
@@ -44,7 +44,7 @@ namespace Frends.Community.Apache.Parquet
 
     public enum FileEncoding { UTF8, ANSI, ASCII, Unicode, Other }
 
-    public enum CompressionType { Gzip, Snappy, None}
+    public enum CompressionType { Gzip, Snappy, None }
 
     public class WriteParquetOptions
     {
@@ -76,7 +76,7 @@ namespace Frends.Community.Apache.Parquet
         /// </summary>
         [DefaultValue("true")]
         public bool ContainsHeaderRow { get; set; } = true;
-        
+
         /// <summary>
         /// This flag tells the reader to trim whitespace from the beginning and ending of the field value when reading.
         /// </summary>
