@@ -268,6 +268,43 @@ namespace Frends.Community.Apache.Parquet.Tests
             ParquetTasks.ConvertCsvToParquet(input, options, poptions, new System.Threading.CancellationToken());
         }
 
+        /// <summary>
+        /// Test case for counting rows before processing
+        /// </summary>
+        [Test]
+        public void WriteParquetFileCountRows()
+        {
+            TestTools.RemoveOutputFile(_outputFileName);
+
+            var options = new WriteCSVOptions()
+            {
+                CsvDelimiter = ";",
+                FileEncoding = FileEncoding.UTF8,
+                EnableBom = false,
+                EncodingInString = ""
+            };
+
+            var poptions = new WriteParquetOptions()
+            {
+                ParquetRowGroupSize = 5000,
+                ParquetCompressionMethod = CompressionType.Gzip,
+                CountRowsBeforeProcessing = true
+            };
+
+            var input = new WriteInput()
+            {
+                CsvFileName = _inputCsvFileName,
+                OuputFileName = _outputFileName,
+                ThrowExceptionOnErrorResponse = true,
+                Schema = _commonSchema
+            };
+
+            ParquetTasks.ConvertCsvToParquet(input, options, poptions, new System.Threading.CancellationToken());
+
+            var hash = TestTools.MD5Hash(_outputFileName);
+            Assert.IsTrue(hash == "2b2ea410911658f3fbfa36ec7938d27e", "File checksum didn't match.");
+        }
+
 
         /// <summary>
         /// Simple csv -> parquet test case with large group size

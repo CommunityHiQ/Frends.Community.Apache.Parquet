@@ -60,6 +60,12 @@ namespace Frends.Community.Apache.Parquet
         /// </summary>
         [DefaultValue(CompressionType.Gzip)]
         public CompressionType ParquetCompressionMethod { get; set; } = CompressionType.Gzip;
+
+        /// <summary>
+        /// Does task read whole file and count rows before processing
+        /// </summary>
+        [DefaultValue(false)]
+        public bool CountRowsBeforeProcessing { get; set; } = false;
     }
 
     public class WriteCSVOptions

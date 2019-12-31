@@ -67,6 +67,33 @@ namespace Frends.Community.Apache.Parquet
                     parquetRowGroupSize = fileInfo.Length;
                 }
 
+                // Count rows
+                if (parquetOptions.CountRowsBeforeProcessing)
+                {
+                    long rowCount = 0;
+                    using (var reader = new StreamReader(input.CsvFileName, encoding))
+                    {
+                        using (var csv = new CsvReader(reader, csvConfiguration))
+                        {
+                            if (csvOptions.ContainsHeaderRow)
+                            {
+                                csv.Read();
+                                csv.ReadHeader();
+                            }
+                            while (csv.Read())
+                            {
+                                rowCount++;
+                            }
+                        }
+                    }
+                    // Set the right count for memory optimization
+                    if (parquetRowGroupSize > rowCount)
+                    {
+                        parquetRowGroupSize = rowCount;
+                    }
+                }
+
+
                 // Open file and read csv
                 // CSV is row-oriented, Parquet is column-oriented.
 
@@ -87,7 +114,6 @@ namespace Frends.Community.Apache.Parquet
                             {
                                 parquetWriter.CompressionMethod = Definitions.GetCompressionMethod(parquetOptions.ParquetCompressionMethod);
 
-                                // Jagged array because column orientation
                                 List<Object> csvColumns = new List<Object>();
                                 for (int i = 0; i < colCount; i++)
                                 {
