@@ -438,7 +438,7 @@ namespace Frends.Community.Apache.Parquet.Tests
             ParquetTasks.ConvertCsvToParquet(input, options, poptions, new System.Threading.CancellationToken());
 
             var hash = TestTools.MD5Hash(_outputFileName);
-            Assert.IsTrue(hash == "c918d8a0309aef6c86db3917cff06b16", "File checksum didn't match.");
+            Assert.IsTrue(hash == "baae1e7c63872d0626a4c0e86cb503e3", "File checksum didn't match.");
         }
 
 
