@@ -14,9 +14,9 @@ namespace Frends.Community.Apache.Parquet
         /// <returns>Parquet.Data.DataType</returns>
         public static DataType GetDataType(string typeStr)
         {
-            string str = typeStr.TrimEnd(new char[] { '?' });
+            string jsonType = typeStr.TrimEnd(new char[] { '?' });
 
-            switch (str.ToLower())
+            switch (jsonType.ToLower())
             {
                 case "boolean":
                     return DataType.Boolean;
@@ -43,7 +43,7 @@ namespace Frends.Community.Apache.Parquet
                 case "unspecified":
                     return DataType.Unspecified;
                 default:
-                    throw new ArgumentOutOfRangeException(str);
+                    throw new ArgumentOutOfRangeException(jsonType);
             }
         }
 
@@ -55,11 +55,11 @@ namespace Frends.Community.Apache.Parquet
         /// <returns>Array</returns>
         public static Object GetCSVColumnStorage(DataField field, long groupSize)
         {
-            DataType type = field.DataType;
+            DataType fieldType = field.DataType;
 
             if (field.HasNulls)
             {
-                switch (field.DataType)
+                switch (fieldType)
                 {
                     case DataType.Boolean:
                         return new bool?[groupSize];
@@ -87,7 +87,7 @@ namespace Frends.Community.Apache.Parquet
             }
             else
             {
-                switch (field.DataType)
+                switch (fieldType)
                 {
                     case DataType.Boolean:
                         return new bool[groupSize];

@@ -198,7 +198,7 @@ namespace Frends.Community.Apache.Parquet.Tests
         {
             TestTools.RemoveOutputFile(_outputFileName);
             RunDecimalTestNullable("en-US", _inputCsvFileNameDecDot);
-            var hash = TestTools.MD5Hash(_outputFileName);
+            //var hash = TestTools.MD5Hash(_outputFileName);
 
             Assert.AreEqual(12345.6789m, ReturnFirstDecimal(_outputFileName, 1));
             Assert.AreEqual(12345.6789f, ReturnFirstDecimal(_outputFileName, 2));
@@ -213,7 +213,7 @@ namespace Frends.Community.Apache.Parquet.Tests
         {
             TestTools.RemoveOutputFile(_outputFileName);
             RunDecimalTestNormal("", _inputCsvFileNameDecComma);
-            var hash = TestTools.MD5Hash(_outputFileName);
+            //var hash = TestTools.MD5Hash(_outputFileName);
 
             Assert.AreEqual(12345.6789m, ReturnFirstDecimal(_outputFileName, 1));
             Assert.AreEqual(12345.6789f, ReturnFirstDecimal(_outputFileName, 2));
@@ -228,7 +228,7 @@ namespace Frends.Community.Apache.Parquet.Tests
         {
             TestTools.RemoveOutputFile(_outputFileName);
             RunDecimalTestNullable("fi-FI", _inputCsvFileNameDecComma);
-            var hash = TestTools.MD5Hash(_outputFileName);
+            //var hash = TestTools.MD5Hash(_outputFileName);
 
             Assert.AreEqual(12345.6789m, ReturnFirstDecimal(_outputFileName, 1));
             Assert.AreEqual(12345.6789f, ReturnFirstDecimal(_outputFileName, 2));
@@ -246,52 +246,50 @@ namespace Frends.Community.Apache.Parquet.Tests
         {
             var encoding = Definitions.GetEncoding(FileEncoding.UTF8, false, "");
 
-            using (var filereader = File.Open(parquetFilePath, FileMode.Open, FileAccess.Read))
+            using var filereader = File.Open(parquetFilePath, FileMode.Open, FileAccess.Read);
+
+            var options = new ParquetOptions { TreatByteArrayAsString = true };
+            var parquetReader = new ParquetReader(filereader, options);
+
+            Par.Data.DataField[] dataFields = parquetReader.Schema.GetDataFields();
+
+            using ParquetRowGroupReader groupReader = parquetReader.OpenRowGroupReader(0);
+
+            Par.Data.DataColumn[] columns = dataFields.Select(groupReader.ReadColumn).ToArray();
+            Par.Data.DataColumn decimalColumn = columns[columnIndex];
+
+            if (dataFields[columnIndex].HasNulls)
             {
-                var options = new ParquetOptions { TreatByteArrayAsString = true };
-                var parquetReader = new ParquetReader(filereader, options);
-
-                Par.Data.DataField[] dataFields = parquetReader.Schema.GetDataFields();
-
-                using (ParquetRowGroupReader groupReader = parquetReader.OpenRowGroupReader(0))
+                switch (dataFields[columnIndex].DataType)
                 {
-                    Par.Data.DataColumn[] columns = dataFields.Select(groupReader.ReadColumn).ToArray();
-                    Par.Data.DataColumn decimalColumn = columns[columnIndex];
-
-                    if (dataFields[columnIndex].HasNulls)
-                    {
-                        switch (dataFields[columnIndex].DataType)
-                        {
-                            case Par.Data.DataType.Decimal:
-                                decimal?[] dec = (decimal?[])decimalColumn.Data;
-                                return dec[0];
-                            case Par.Data.DataType.Float:
-                                float?[] flo = (float?[])decimalColumn.Data;
-                                return flo[0];
-                            case Par.Data.DataType.Double:
-                                double?[] dou = (double?[])decimalColumn.Data;
-                                return dou[0];
-                            default:
-                                throw new System.Exception("Unknown nullable datatype:" + dataFields[columnIndex].DataType);
-                        }
-                    }
-                    else
-                    {
-                        switch (dataFields[columnIndex].DataType)
-                        {
-                            case Par.Data.DataType.Decimal:
-                                decimal[] dec = (decimal[])decimalColumn.Data;
-                                return dec[0];
-                            case Par.Data.DataType.Float:
-                                float[] flo = (float[])decimalColumn.Data;
-                                return flo[0];
-                            case Par.Data.DataType.Double:
-                                double[] dou = (double[])decimalColumn.Data;
-                                return dou[0];
-                            default:
-                                throw new System.Exception("Unknown datatype:" + dataFields[columnIndex].DataType);
-                        }
-                    }
+                    case Par.Data.DataType.Decimal:
+                        decimal?[] dec = (decimal?[])decimalColumn.Data;
+                        return dec[0];
+                    case Par.Data.DataType.Float:
+                        float?[] flo = (float?[])decimalColumn.Data;
+                        return flo[0];
+                    case Par.Data.DataType.Double:
+                        double?[] dou = (double?[])decimalColumn.Data;
+                        return dou[0];
+                    default:
+                        throw new System.Exception("Unknown nullable datatype:" + dataFields[columnIndex].DataType);
+                }
+            }
+            else
+            {
+                switch (dataFields[columnIndex].DataType)
+                {
+                    case Par.Data.DataType.Decimal:
+                        decimal[] dec = (decimal[])decimalColumn.Data;
+                        return dec[0];
+                    case Par.Data.DataType.Float:
+                        float[] flo = (float[])decimalColumn.Data;
+                        return flo[0];
+                    case Par.Data.DataType.Double:
+                        double[] dou = (double[])decimalColumn.Data;
+                        return dou[0];
+                    default:
+                        throw new System.Exception("Unknown datatype:" + dataFields[columnIndex].DataType);
                 }
             }
         }
