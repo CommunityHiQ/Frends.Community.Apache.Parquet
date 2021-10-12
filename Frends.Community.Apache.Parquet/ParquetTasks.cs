@@ -130,7 +130,12 @@ namespace Frends.Community.Apache.Parquet
                                         // Insert data to structure
                                         for (int i = 0; i < colCount; i++)
                                         {
-                                            if (dataFields[i].HasNulls)
+                                            if( dataFields[i].IsArray)
+                                            {
+                                                // split to array later
+                                                ((string[])csvColumns[i])[dataIndex] = csv.GetField(i);
+
+                                            } else if (dataFields[i].HasNulls)
                                             {
                                                 switch (dataFields[i].DataType)
                                                 {
@@ -288,8 +293,25 @@ namespace Frends.Community.Apache.Parquet
                     nullable = true;
                 }
 
-                var field = new DataField(element.Value<string>("name"), DataTypes.GetDataType(type), nullable);
-                fields.Add(field);
+                if (type.StartsWith("array"))
+                {
+                    string realType = type.Replace("array<", "").Replace(">", "");
+
+                    if(DataTypes.GetDataType(realType) == DataType.Int16)
+                    {
+                        // This task uses old version parquet.net because compatibility issues
+                        throw new NotImplementedException("Not supported. See https://github.com/aloneguid/parquet-dotnet/pull/45");
+                    }
+
+                    // nullable = true, array = true
+                    var field = new DataField(element.Value<string>("name"), DataTypes.GetDataType(realType), true, true);
+                    fields.Add(field);
+                }
+                else
+                {
+                    var field = new DataField(element.Value<string>("name"), DataTypes.GetDataType(type), nullable, false);
+                    fields.Add(field);
+                }
             }
 
             return fields;

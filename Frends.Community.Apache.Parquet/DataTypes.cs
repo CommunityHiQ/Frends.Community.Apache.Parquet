@@ -57,7 +57,27 @@ namespace Frends.Community.Apache.Parquet
         {
             DataType fieldType = field.DataType;
 
-            if (field.HasNulls)
+            if( field.IsArray)
+            {
+                switch (fieldType)
+                {
+                    case DataType.Int16:
+                    case DataType.Boolean:
+                    case DataType.DateTimeOffset:
+                    case DataType.Decimal:
+                    case DataType.Double:
+                    case DataType.Float:
+                    case DataType.Int32:
+                    case DataType.Int64:
+                    //case "int96":
+                    // this is for datetimes. Use datetimeoffset
+                    case DataType.String:
+                        return new string[groupSize];
+                    default:
+                        throw new ArgumentOutOfRangeException(field.DataType.ToString());
+                }
+            } 
+            else if (field.HasNulls)
             {
                 switch (fieldType)
                 {
