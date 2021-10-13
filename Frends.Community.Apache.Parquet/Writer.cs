@@ -17,11 +17,10 @@ namespace Frends.Community.Apache.Parquet
         /// Writes dataLen rows and typed columns to the file.
         /// </summary>
         /// <param name="csvColumns">Processed CSV data</param>
-        /// <param name="dataLen">Row count</param>
         /// <param name="writer">ParquetWriter</param>
         /// <param name="fields">Field structure</param>
         /// <param name="config">Config structure</param>
-        public static void WriteGroup(List<Object> csvColumns, long dataLen, ParquetWriter writer, List<DataField> fields, Config config)
+        public static void WriteGroup(List<Object> csvColumns, ParquetWriter writer, List<DataField> fields, Config config)
         {
             string csvSep =  "|";
             using (ParquetRowGroupWriter rg = writer.CreateRowGroup())
@@ -120,7 +119,7 @@ namespace Frends.Community.Apache.Parquet
                                     int count = 0;
                                     foreach (string item in col?.Split(csvSep[0]))
                                     {
-                                        flData.Add(GetFloatValue(item, config.GetConfigValue(fields[i].Name)));
+                                        flData.Add(GetFloatValueNullable(item, config.GetConfigValue(fields[i].Name)));
                                         reps.Add(count == 0 ? 0 : 1);
                                         count++;
                                     }
@@ -295,7 +294,7 @@ namespace Frends.Community.Apache.Parquet
         }
 
         /// <summary>
-        /// Return CultureInfo for given cultero or fi-FI
+        /// Return CultureInfo for given culture or fi-FI
         /// </summary>
         /// <param name="culture">Culture name</param>
         /// <returns>CultureInfo</returns>
@@ -308,6 +307,10 @@ namespace Frends.Community.Apache.Parquet
             }
             else
             {
+                if( culture == "InvariantCulture")
+                {
+                    return System.Globalization.CultureInfo.InvariantCulture;
+                }
                 return new CultureInfo(culture);
             }
         }
@@ -385,11 +388,25 @@ namespace Frends.Community.Apache.Parquet
         /// <param name="value">float as string</param>
         /// <param name="culture">Optional CultureInfo object</param>
         /// <returns>float</returns>
-        public static float? GetFloatValue(string value, string culture)
+        public static float? GetFloatValueNullable(string value, string culture)
         {
             if (!String.IsNullOrWhiteSpace(value))
             {
                 return float.Parse(value, Writer.GetCultureInfo(culture));
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Parse float or return null if value is empty
+        /// </summary>
+        /// <param name="value">float as string</param>
+        /// <returns>float</returns>
+        public static float? GetFloatValueNullable(string value)
+        {
+            if (!String.IsNullOrWhiteSpace(value))
+            {
+                return float.Parse(value);
             }
             return null;
         }
@@ -410,6 +427,20 @@ namespace Frends.Community.Apache.Parquet
         }
 
         /// <summary>
+        /// Parse decimal or return null if value is empty
+        /// </summary>
+        /// <param name="value">decimal as string</param>
+        /// <returns>decimal</returns>
+        public static decimal? GetDecimalValueNullable(string value)
+        {
+            if (!String.IsNullOrWhiteSpace(value))
+            {
+                return decimal.Parse(value);
+            }
+            return null;
+        }
+
+        /// <summary>
         /// Parse double or return null if value is empty
         /// </summary>
         /// <param name="value">double as string</param>
@@ -420,6 +451,21 @@ namespace Frends.Community.Apache.Parquet
             if (!String.IsNullOrWhiteSpace(value))
             {
                 return double.Parse(value, Writer.GetCultureInfo(culture));
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Parse double or return null if value is empty
+        /// </summary>
+        /// <param name="value">double as string</param>
+
+        /// <returns>double</returns>
+        public static double? GetDoubleValueNullable(string value)
+        {
+            if (!String.IsNullOrWhiteSpace(value))
+            {
+                return double.Parse(value);
             }
             return null;
         }

@@ -3,6 +3,7 @@ using Parquet;
 using System;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Par = Parquet;
 
 namespace Frends.Community.Apache.Parquet.Tests
@@ -30,6 +31,12 @@ namespace Frends.Community.Apache.Parquet.Tests
     { ""name"": ""Description"", ""type"": ""string?""},
 ]";
 
+        private const string _commonArraySchema = @"[
+                                { ""name"": ""Id"", ""type"": ""int?""},
+                                {""name"": ""IntArray"", ""type"": ""array<int>""},
+                                {""name"": ""StringArray"", ""type"": ""array<string>""},
+                                { ""name"": ""Description"", ""type"": ""string?""},
+                            ]";
 
         [SetUp]
         public void Setup()
@@ -127,7 +134,7 @@ namespace Frends.Community.Apache.Parquet.Tests
 
             var input = new WriteInput()
             {
-                CsvFileName = _inputCsvFileName,
+                FileName = _inputCsvFileName,
                 OuputFileName = _outputFileName,
                 ThrowExceptionOnErrorResponse = true,
                 Schema = _commonSchema
@@ -164,7 +171,7 @@ namespace Frends.Community.Apache.Parquet.Tests
 
             var input = new WriteInput()
             {
-                CsvFileName = _inputCsvFileNameNoNulls,
+                FileName = _inputCsvFileNameNoNulls,
                 OuputFileName = _outputFileName,
                 ThrowExceptionOnErrorResponse = true,
                 Schema = @"[
@@ -206,7 +213,7 @@ namespace Frends.Community.Apache.Parquet.Tests
 
             var input = new WriteInput()
             {
-                CsvFileName = _inputCsvFileNameQuotes,
+                FileName = _inputCsvFileNameQuotes,
                 OuputFileName = _outputFileName,
                 ThrowExceptionOnErrorResponse = true,
                 Schema = _commonSchema
@@ -240,15 +247,10 @@ namespace Frends.Community.Apache.Parquet.Tests
 
             var input = new WriteInput()
             {
-                CsvFileName = _inputCsvFileNameArray,
+                FileName = _inputCsvFileNameArray,
                 OuputFileName = _outputFileName,
                 ThrowExceptionOnErrorResponse = true,
-                Schema = @"[
-                                { ""name"": ""Id"", ""type"": ""int?""},
-                                {""name"": ""IntArray"", ""type"": ""array<int>""},
-                                {""name"": ""StringArray"", ""type"": ""array<string>""},
-                                { ""name"": ""Description"", ""type"": ""string?""},
-                            ]"
+                Schema = _commonArraySchema
             };
 
             ParquetTasks.ConvertCsvToParquet(input, options, poptions, new System.Threading.CancellationToken());
@@ -279,7 +281,7 @@ namespace Frends.Community.Apache.Parquet.Tests
 
             var input = new WriteInput()
             {
-                CsvFileName = _inputCsvFileNameArray2,
+                FileName = _inputCsvFileNameArray2,
                 OuputFileName = _outputFileName,
                 ThrowExceptionOnErrorResponse = true,
                 Schema = @"[
@@ -303,7 +305,7 @@ namespace Frends.Community.Apache.Parquet.Tests
             ParquetTasks.ConvertCsvToParquet(input, options, poptions, new System.Threading.CancellationToken());
 
             var hash = TestTools.MD5Hash(_outputFileName);
-            Assert.IsTrue(hash == "a6cc0c1b414467a3c10708be30361ed6", "File checksum didn't match.");
+            Assert.AreEqual("a6cc0c1b414467a3c10708be30361ed6", hash, "File checksum didn't match.");
         }
 
         /// <summary>
@@ -332,7 +334,7 @@ namespace Frends.Community.Apache.Parquet.Tests
 
             var input = new WriteInput()
             {
-                CsvFileName = _inputCsvFileNameArrayLarge,
+                FileName = _inputCsvFileNameArrayLarge,
                 OuputFileName = _outputFileName,
                 ThrowExceptionOnErrorResponse = true,
                 Schema = schema
@@ -342,6 +344,50 @@ namespace Frends.Community.Apache.Parquet.Tests
 
             var hash = TestTools.MD5Hash(_outputFileName);
             Assert.IsTrue(hash == "25ed5c84846597294990b32b8fbc4f53", "File checksum didn't match.");
+        }
+
+        [Test]
+        public void ArrayGetValues()
+        {
+            TestTools.RemoveOutputFile(_outputFileName);
+
+            var options = new WriteCSVOptions()
+            {
+                CsvDelimiter = ";",
+                FileEncoding = FileEncoding.UTF8,
+                EnableBom = false,
+                EncodingInString = ""
+            };
+
+            var poptions = new WriteParquetOptions()
+            {
+                ParquetRowGroupSize = 5000,
+                ParquetCompressionMethod = CompressionType.Snappy
+            };
+
+            var input = new WriteInput()
+            {
+                FileName = _inputCsvFileNameArray,
+                OuputFileName = _outputFileName,
+                ThrowExceptionOnErrorResponse = true,
+                Schema = _commonArraySchema
+            };
+
+            ParquetTasks.ConvertCsvToParquet(input, options, poptions, new System.Threading.CancellationToken());
+
+            Assert.AreEqual(null, ReturnParquetValue(_outputFileName, 1, 0));
+            Assert.AreEqual("21", ReturnParquetValue(_outputFileName, 1, 1));
+            Assert.AreEqual("31|32", ReturnParquetValue(_outputFileName, 1, 2));
+            Assert.AreEqual("41|43", ReturnParquetValue(_outputFileName, 1, 3));
+            Assert.AreEqual("71|72|73|74|75||77|78|79", ReturnParquetValue(_outputFileName, 1, 6));
+
+            Assert.AreEqual("", ReturnParquetValue(_outputFileName, 2, 0));
+            Assert.AreEqual("Yksi2", ReturnParquetValue(_outputFileName, 2, 1));
+            Assert.AreEqual("Yksi3|Kaksi3", ReturnParquetValue(_outputFileName, 2,2));
+            Assert.AreEqual("Yksi7||Kolme7", ReturnParquetValue(_outputFileName, 2, 6));
+
+            var hash = TestTools.MD5Hash(_outputFileName);
+            Assert.IsTrue(hash == "f3e7683b40a4e2a9dfa09668b378dd4e", "File checksum didn't match.");
         }
 
         /// <summary>
@@ -354,9 +400,9 @@ namespace Frends.Community.Apache.Parquet.Tests
             RunDecimalTestNullable("en-US", _inputCsvFileNameDecDot);
             //var hash = TestTools.MD5Hash(_outputFileName);
 
-            Assert.AreEqual(12345.6789m, ReturnFirstDecimal(_outputFileName, 1));
-            Assert.AreEqual(12345.6789f, ReturnFirstDecimal(_outputFileName, 2));
-            Assert.AreEqual(12345.6789d, ReturnFirstDecimal(_outputFileName, 3));
+            Assert.AreEqual(12345.6789m, ReturnParquetValue(_outputFileName, 1, 0));
+            Assert.AreEqual(12345.6789f, ReturnParquetValue(_outputFileName, 2, 0));
+            Assert.AreEqual(12345.6789d, ReturnParquetValue(_outputFileName, 3, 0));
         }
 
         /// <summary>
@@ -369,9 +415,9 @@ namespace Frends.Community.Apache.Parquet.Tests
             RunDecimalTestNormal("", _inputCsvFileNameDecComma);
             //var hash = TestTools.MD5Hash(_outputFileName);
 
-            Assert.AreEqual(12345.6789m, ReturnFirstDecimal(_outputFileName, 1));
-            Assert.AreEqual(12345.6789f, ReturnFirstDecimal(_outputFileName, 2));
-            Assert.AreEqual(12345.6789d, ReturnFirstDecimal(_outputFileName, 3));
+            Assert.AreEqual(2.3m, ReturnParquetValue(_outputFileName, 1, 1));
+            Assert.AreEqual(2.3f, ReturnParquetValue(_outputFileName, 2, 1));
+            Assert.AreEqual(2.3d, ReturnParquetValue(_outputFileName, 3, 1));
         }
 
         /// <summary>
@@ -384,19 +430,19 @@ namespace Frends.Community.Apache.Parquet.Tests
             RunDecimalTestNullable("fi-FI", _inputCsvFileNameDecComma);
             //var hash = TestTools.MD5Hash(_outputFileName);
 
-            Assert.AreEqual(12345.6789m, ReturnFirstDecimal(_outputFileName, 1));
-            Assert.AreEqual(12345.6789f, ReturnFirstDecimal(_outputFileName, 2));
-            Assert.AreEqual(12345.6789d, ReturnFirstDecimal(_outputFileName, 3));
+            Assert.AreEqual(12345.6789m, ReturnParquetValue(_outputFileName, 1, 0));
+            Assert.AreEqual(12345.6789f, ReturnParquetValue(_outputFileName, 2, 0));
+            Assert.AreEqual(12345.6789d, ReturnParquetValue(_outputFileName, 3, 0));
         }
 
         /// <summary>
-        /// Reads first decimal from first group and given column
+        /// Reads first value from first group and given column
         /// </summary>
         /// <param name="parquetFilePath">Full filepath</param>
         /// <param name="columnIndex">Column index 0...n</param>
         /// <returns></returns>
 
-        private object ReturnFirstDecimal(string parquetFilePath, int columnIndex)
+        public static object ReturnParquetValue(string parquetFilePath, int columnIndex, int rowIndex)
         {
             var encoding = Definitions.GetEncoding(FileEncoding.UTF8, false, "");
 
@@ -410,21 +456,143 @@ namespace Frends.Community.Apache.Parquet.Tests
             using ParquetRowGroupReader groupReader = parquetReader.OpenRowGroupReader(0);
 
             Par.Data.DataColumn[] columns = dataFields.Select(groupReader.ReadColumn).ToArray();
-            Par.Data.DataColumn decimalColumn = columns[columnIndex];
+            Par.Data.DataColumn dataColumn = columns[columnIndex];
 
-            if (dataFields[columnIndex].HasNulls)
+            if (dataFields[columnIndex].IsArray)
+            {
+                int count = 0;
+                int index = 0;
+                var sb = new StringBuilder("");
+
+                switch (dataFields[columnIndex].DataType)
+                {
+                    case Par.Data.DataType.String:
+                        string[] str = (string[])dataColumn.Data;
+
+                        foreach(var status in dataColumn.RepetitionLevels)
+                        {
+                            // 0 = start
+                            if( index>0 && status == 0)
+                            {
+                                count++;
+                            }
+                            if(count == rowIndex)
+                            {
+                                if( str[index]==null && status==0)
+                                {
+                                    if( dataColumn.RepetitionLevels.Length==1 || 
+                                        dataColumn.RepetitionLevels.Length<=index+1 ||
+                                        dataColumn.RepetitionLevels[index+1]==0)
+                                    {
+                                        return null;
+                                    }
+                                }
+                                sb.Append(str[index]);
+                                sb.Append("|");
+                            }
+                            if(count > rowIndex)
+                            {
+                                return sb.ToString().TrimEnd('|');
+                            }
+                            index++;
+                        }
+                        return sb.ToString().TrimEnd('|');
+                        
+                    case Par.Data.DataType.Int32:
+                        Int32?[] i32 = (Int32?[])dataColumn.Data;
+
+                        foreach (var status in dataColumn.RepetitionLevels)
+                        {
+                            // 0 = start
+                            if (index > 0 && status == 0)
+                            {
+                                count++;
+                            }
+                            if (count == rowIndex)
+                            {
+                                if (i32[index] == null && status == 0)
+                                {
+                                    // one element
+                                    // last element
+                                    // no more subelements
+                                    if (dataColumn.RepetitionLevels.Length == 1 ||
+                                        dataColumn.RepetitionLevels.Length <= index + 1 ||
+                                        dataColumn.RepetitionLevels[index + 1] == 0)
+                                    {
+                                        return null;
+                                    }
+                                }
+                                sb.Append(i32[index].ToString());
+                                sb.Append("|");
+                            }
+                            if (count > rowIndex)
+                            {
+                                return sb.ToString().TrimEnd('|');
+                            }
+                            index++;
+                        }
+                        return sb.ToString().TrimEnd('|');
+                    case Par.Data.DataType.Double:
+                        double?[] dbl = (double?[])dataColumn.Data;
+
+                        foreach (var status in dataColumn.RepetitionLevels)
+                        {
+                            // 0 = start
+                            if (index > 0 && status == 0)
+                            {
+                                count++;
+                            }
+                            if (count == rowIndex)
+                            {
+                                if (dbl[index] == null && status == 0)
+                                {
+                                    // one element
+                                    // last element
+                                    // no more subelements
+                                    if (dataColumn.RepetitionLevels.Length == 1 ||
+                                        dataColumn.RepetitionLevels.Length <= index + 1 ||
+                                        dataColumn.RepetitionLevels[index + 1] == 0)
+                                    {
+                                        return null;
+                                    }
+                                }
+                                if(dbl[index]!=null)
+                                {
+                                    double dstr = (double)dbl[index];
+                                    sb.Append(dstr.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                                }
+                                sb.Append("|");
+                            }
+                            if (count > rowIndex)
+                            {
+                                return sb.ToString().TrimEnd('|');
+                            }
+                            index++;
+                        }
+                        return sb.ToString().TrimEnd('|');
+                    default:
+                        throw new System.Exception("Unknown array datatype:" + dataFields[columnIndex].DataType);
+                }
+            }
+            else if (dataFields[columnIndex].HasNulls)
             {
                 switch (dataFields[columnIndex].DataType)
                 {
                     case Par.Data.DataType.Decimal:
-                        decimal?[] dec = (decimal?[])decimalColumn.Data;
-                        return dec[0];
+                        decimal?[] dec = (decimal?[])dataColumn.Data;
+                        return dec[rowIndex];
                     case Par.Data.DataType.Float:
-                        float?[] flo = (float?[])decimalColumn.Data;
-                        return flo[0];
+                        float?[] flo = (float?[])dataColumn.Data;
+                        return flo[rowIndex];
                     case Par.Data.DataType.Double:
-                        double?[] dou = (double?[])decimalColumn.Data;
-                        return dou[0];
+                        double?[] dou = (double?[])dataColumn.Data;
+                        return dou[rowIndex];
+                    case Par.Data.DataType.String:
+                        string[] str = (string[])dataColumn.Data;
+                        return str[rowIndex];
+                    case Par.Data.DataType.Int32:
+                        Int32?[] i32 = (Int32?[])dataColumn.Data;
+                        return i32[rowIndex];
                     default:
                         throw new System.Exception("Unknown nullable datatype:" + dataFields[columnIndex].DataType);
                 }
@@ -434,14 +602,20 @@ namespace Frends.Community.Apache.Parquet.Tests
                 switch (dataFields[columnIndex].DataType)
                 {
                     case Par.Data.DataType.Decimal:
-                        decimal[] dec = (decimal[])decimalColumn.Data;
-                        return dec[0];
+                        decimal[] dec = (decimal[])dataColumn.Data;
+                        return dec[rowIndex];
                     case Par.Data.DataType.Float:
-                        float[] flo = (float[])decimalColumn.Data;
-                        return flo[0];
+                        float[] flo = (float[])dataColumn.Data;
+                        return flo[rowIndex];
                     case Par.Data.DataType.Double:
-                        double[] dou = (double[])decimalColumn.Data;
-                        return dou[0];
+                        double[] dou = (double[])dataColumn.Data;
+                        return dou[rowIndex];
+                    case Par.Data.DataType.String:
+                        string[] str = (string[])dataColumn.Data;
+                        return str[rowIndex];
+                    case Par.Data.DataType.Int32:
+                        Int32[] i32 = (Int32[])dataColumn.Data;
+                        return i32[rowIndex];
                     default:
                         throw new System.Exception("Unknown datatype:" + dataFields[columnIndex].DataType);
                 }
@@ -471,7 +645,7 @@ namespace Frends.Community.Apache.Parquet.Tests
 
             var input = new WriteInput()
             {
-                CsvFileName = inputFileName,
+                FileName = inputFileName,
                 OuputFileName = _outputFileName,
                 ThrowExceptionOnErrorResponse = true,
                 Schema = @"[
@@ -503,7 +677,7 @@ namespace Frends.Community.Apache.Parquet.Tests
 
             var input = new WriteInput()
             {
-                CsvFileName = inputFileName,
+                FileName = inputFileName,
                 OuputFileName = _outputFileName,
                 ThrowExceptionOnErrorResponse = true,
                 Schema = @"[
@@ -542,7 +716,7 @@ namespace Frends.Community.Apache.Parquet.Tests
 
             var input = new WriteInput()
             {
-                CsvFileName = _inputCsvFileName,
+                FileName = _inputCsvFileName,
                 OuputFileName = _outputFileName,
                 ThrowExceptionOnErrorResponse = true,
                 Schema = _commonSchema
@@ -581,7 +755,7 @@ namespace Frends.Community.Apache.Parquet.Tests
 
             var input = new WriteInput()
             {
-                CsvFileName = _inputCsvFileNameLarge,
+                FileName = _inputCsvFileNameLarge,
                 OuputFileName = _outputFileName,
                 ThrowExceptionOnErrorResponse = true,
                 Schema = schema

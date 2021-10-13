@@ -6,9 +6,9 @@
     <Company>HiQ Finland</Company>
     <Authors>HiQ Finland</Authors>
     <Description>FRENDS Community Apache Parquet Task</Description>
-    <Version>1.1.0</Version>
-    <AssemblyVersion>1.1.0.2110</AssemblyVersion>
-    <FileVersion>1.1.0.2110</FileVersion>
+    <Version>1.2.0</Version>
+    <AssemblyVersion>1.2.0.2110</AssemblyVersion>
+    <FileVersion>1.2.0.2110</FileVersion>
   </PropertyGroup>
  
   <ItemGroup>

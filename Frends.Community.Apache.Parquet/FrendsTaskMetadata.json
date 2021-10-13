@@ -3,6 +3,9 @@
   [
     {
       "TaskMethod": "Frends.Community.Apache.Parquet.ParquetTasks.ConvertCsvToParquet"
+    },
+    {
+      "TaskMethod": "Frends.Community.Apache.Parquet.ParquetTasks.ConvertJsonToParquet"
     }
   ]
 }

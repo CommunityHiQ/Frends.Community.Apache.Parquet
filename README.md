@@ -8,6 +8,7 @@ https://github.com/elastacloud/parquet-dotnet
 - [Installing](#installing)
 - [Tasks](#tasks)
      - [ConvertCsvToParquet](#ConvertCsvToParquet)
+     - [ConvertJsonToParquet](#ConvertJsonToParquet)
 - [Building](#building)
 - [Contributing](#contributing)
 - [Change Log](#change-log)
@@ -27,12 +28,12 @@ Converts CSV file to Parquet format using given metadata.
 #### Input
 | Property | Type | Description | Example |
 | -------- | -------- | -------- | -------- |
-| Schema | json | Schema for CSV data. Types: boolean, datetime, datetimeoffset, decimal, double, float, int16, int, int32, int64, string and unspecified where ? means nullable column. Special characters are not allowed in column names. (Eg. characters '. ,;{}()=' have proven to be problematic.) | [  {"name": "Id", "type": "int"}, {"name": "Name", "type": "string"}, {"name": "Desc", "type": "string?"}, {"name": "number", "type": "decimal?", "culture": "en-US"} ] |
+| Schema | json | Schema for CSV data. Types: boolean, datetime, datetimeoffset, decimal, double, float, int16, int, int32, int64, string and unspecified where ? means nullable column. Special characters are not allowed in column names. (Eg. characters '. ,;{}()=' have proven to be problematic.). Array syntax is array\<type\>. | [  {"name": "Id", "type": "int"}, {"name": "Name", "type": "string"}, {"name": "Desc", "type": "string?"}, {"name": "number", "type": "decimal?", "culture": "en-US"}, {"name": "IntArray", "type": "array\<Int32\>"} ] |
 | CSV Filename | string |  Full path to the file to be read. | c:\temp\test.csv |
 | Output Filename | string |Full path to the file to be write. | 'UseDevelopmentStorage=true' |
 | Throw exception on error response | bool | Do not handle exceptions if set true. Otherwise catch exception and return error message. | true |
 
-Note: Decimals, floats and doubles have "fi-FI" default culture. Decimal separator is ","
+Note: Decimals, floats and doubles have "fi-FI" default culture. Decimal separator is ",". Array's items are combined with "|", eg. "1|2|3".
 
 #### CSV Options
 | Property | Type | Description | Example |
@@ -44,7 +45,7 @@ Note: Decimals, floats and doubles have "fi-FI" default culture. Decimal separat
 | CultureInfo          | string               | The culture info to parse the file with, e.g. for decimal separators. InvariantCulture will be used by default. See list of cultures [here](https://msdn.microsoft.com/en-us/library/ee825488(v=cs.20).aspx); use the Language Culture Name. <br> NOTE: Due to an issue with the CsvHelpers library, all CSV tasks will use the culture info setting of the first CSV task in the process; you cannot use different cultures for reading and parsing CSV files in the same process.|   |
 | FileEncoding                                | Enum           | Encoding for the read content. By selecting 'Other' you can use any encoding. | |
 | EncodingInString                            | string         | The name of encoding to use. Required if the FileEncoding choice is 'Other'. A partial list of supported encoding names: https://msdn.microsoft.com/en-us/library/system.text.encoding.getencodings(v=vs.110).aspx | `iso-8859-1` |
-
+| EnableBom | bool |A parameter specifies whether to provide a Unicode byte order mark. | false |
 
 #### Parquet Options
 | Property | Type | Description | Example |
@@ -52,6 +53,47 @@ Note: Decimals, floats and doubles have "fi-FI" default culture. Decimal separat
 | Parquet row group size | number | Parquet files row group size. Batch size should be large enough because of perfomance later. | 5000 |
 | Parquet compression method | Enum | Parquet's compression level. GZip (smallest filesize) / Snappy / None | Gzip |
 | Count rows before processing | bool | Count CSV file rows before processing. If row count if smaller than Parquet row group size, decrease group size. Because this operation reads CSV file before processing, CSV file is processed two times. | false |
+
+### Returns
+
+| Property | Type | Description | Example |
+| -------- | -------- | -------- | -------- |
+| Success | bool | Tells if the operation was successful (true/false)  | true|
+| StatusMessage | string | "ok" when Success==true. Otherwise returns error message |  "ok" |
+| ParquetFileName | string | Full path to the written file. (Same as Output filename parameter) | c:\temp\test.parquet |
+| Rows | number | Number of handled rows. | 124 |
+
+
+## ConvertJsonToParquet
+Converts JSON file to Parquet format using given metadata. Json structure must be array.
+
+### Properties
+
+#### Input
+| Property | Type | Description | Example |
+| -------- | -------- | -------- | -------- |
+| Schema | json | Schema for CSV data. Types: boolean, datetime, datetimeoffset, decimal, double, float, int16, int, int32, int64, string and unspecified where ? means nullable column. Special characters are not allowed in column names. (Eg. characters '. ,;{}()=' have proven to be problematic.). | [  {"name": "Id", "type": "int"}, {"name": "Name", "type": "string"}, {"name": "Desc", "type": "string?"}, {"name": "number", "type": "decimal?"}, {"name": "IntArray", "type": "array\<Int32\>"} ] |
+| JSON Filename | string |  Full path to the file to be read. | c:\temp\test.json |
+| Output Filename | string |Full path to the file to be write. | 'UseDevelopmentStorage=true' |
+| Throw exception on error response | bool | Do not handle exceptions if set true. Otherwise catch exception and return error message. | true |
+
+Note: Decimals, floats and doubles have InvarianCultere as default culture (Decimal separator is "."). Do NOT set culture without testing.
+
+Arrays are in json format: "IntArray": "[1,2,3]"
+
+#### JSON Options
+| Property | Type | Description | Example |
+| -------- | -------- | -------- | -------- |
+| FileEncoding                                | Enum           | Encoding for the read content. By selecting 'Other' you can use any encoding. | |
+| EncodingInString                            | string         | The name of encoding to use. Required if the FileEncoding choice is 'Other'. A partial list of supported encoding names: https://msdn.microsoft.com/en-us/library/system.text.encoding.getencodings(v=vs.110).aspx | `iso-8859-1` |
+| EnableBom | bool |A parameter specifies whether to provide a Unicode byte order mark. | false |
+
+#### Parquet Options
+| Property | Type | Description | Example |
+| -------- | -------- | -------- | -------- |
+| Parquet row group size | number | Parquet files row group size. Batch size should be large enough because of perfomance later. | 5000 |
+| Parquet compression method | Enum | Parquet's compression level. GZip (smallest filesize) / Snappy / None | Gzip |
+
 
 ### Returns
 
@@ -111,3 +153,4 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 | 1.0.7 |Memory allocation optimized. A new option to analyze maximum Parquet row group size added. |
 | 1.0.8 |Standard datatypes (non-nullable) are now supported. |
 | 1.1.0 |Arrays (repeatable fields) are now supported (beta, write-only) |
+| 1.2.0 |JSON - converts json array to Parquet file 
