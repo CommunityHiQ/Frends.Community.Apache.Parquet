@@ -153,4 +153,4 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 | 1.0.7 |Memory allocation optimized. A new option to analyze maximum Parquet row group size added. |
 | 1.0.8 |Standard datatypes (non-nullable) are now supported. |
 | 1.1.0 |Arrays (repeatable fields) are now supported (beta, write-only) |
-| 1.2.0 |JSON - converts json array to Parquet file 
+| 1.2.1 |JSON - converts json array to Parquet file 

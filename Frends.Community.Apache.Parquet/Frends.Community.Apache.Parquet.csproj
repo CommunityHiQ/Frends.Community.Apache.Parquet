@@ -6,13 +6,13 @@
     <Company>HiQ Finland</Company>
     <Authors>HiQ Finland</Authors>
     <Description>FRENDS Community Apache Parquet Task</Description>
-    <Version>1.2.0</Version>
-    <AssemblyVersion>1.2.0.2110</AssemblyVersion>
-    <FileVersion>1.2.0.2110</FileVersion>
+    <Version>1.2.1</Version>
+    <AssemblyVersion>1.2.1.2110</AssemblyVersion>
+    <FileVersion>1.2.1.2110</FileVersion>
   </PropertyGroup>
  
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="4.5.0" />
   </ItemGroup>
 
