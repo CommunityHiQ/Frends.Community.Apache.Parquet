@@ -10,21 +10,216 @@ namespace Frends.Community.Apache.Parquet
 {
     public static class Writer
     {
+
+
+
         /// <summary>
         /// Writes dataLen rows and typed columns to the file.
         /// </summary>
         /// <param name="csvColumns">Processed CSV data</param>
-        /// <param name="dataLen">Row count</param>
         /// <param name="writer">ParquetWriter</param>
         /// <param name="fields">Field structure</param>
         /// <param name="config">Config structure</param>
-        public static void WriteGroup(List<Object> csvColumns, long dataLen, ParquetWriter writer, List<DataField> fields, Config config)
+        public static void WriteGroup(List<Object> csvColumns, ParquetWriter writer, List<DataField> fields, Config config)
         {
+            string csvSep =  "|";
             using (ParquetRowGroupWriter rg = writer.CreateRowGroup())
             {
                 for (int i = 0; i < fields.Count; i++)
                 {
-                    if (fields[i].HasNulls)
+                    if( fields[i].IsArray)
+                    {
+                        var reps = new List<int>();
+                        switch (fields[i].DataType)
+                        {
+                            case DataType.Boolean:
+                                var boolData = new List<bool?>();
+                                foreach (string col in (string[])csvColumns[i])
+                                {
+                                    int count = 0;
+                                    foreach (string item in col?.Split(csvSep[0]))
+                                    {
+                                        boolData.Add(GetBooleanValueNullable(item));
+                                        reps.Add(count == 0 ? 0 : 1);
+                                        count++;
+                                    }
+
+                                    if (count == 0)
+                                    {
+                                        boolData.Add(null);
+                                        reps.Add(0);
+                                    }
+                                }
+                                rg.WriteColumn(new DataColumn(fields[i], boolData.ToArray(), reps.ToArray()));
+                                break;
+                            case DataType.DateTimeOffset:
+                                var dtData = new List<DateTimeOffset?>();
+                                foreach (string col in (string[])csvColumns[i])
+                                {
+                                    int count = 0;
+                                    foreach (string item in col?.Split(csvSep[0]))
+                                    {
+                                        dtData.Add(GetDateTimeOffsetValueNullable(item, config.GetConfigValue(fields[i].Name)));
+                                        reps.Add(count == 0 ? 0 : 1);
+                                        count++;
+                                    }
+
+                                    if (count == 0)
+                                    {
+                                        dtData.Add(null);
+                                        reps.Add(0);
+                                    }
+                                }
+                                rg.WriteColumn(new DataColumn(fields[i], dtData.ToArray(), reps.ToArray()));
+                                break;
+                            case DataType.Decimal:
+                                var decData = new List<Decimal?>();
+                                foreach (string col in (string[])csvColumns[i])
+                                {
+                                    int count = 0;
+                                    foreach (string item in col?.Split(csvSep[0]))
+                                    {
+                                        decData.Add(GetDecimalValueNullable(item, config.GetConfigValue(fields[i].Name)));
+                                        reps.Add(count == 0 ? 0 : 1);
+                                        count++;
+                                    }
+
+                                    if (count == 0)
+                                    {
+                                        decData.Add(null);
+                                        reps.Add(0);
+                                    }
+                                }
+                                rg.WriteColumn(new DataColumn(fields[i], decData.ToArray(), reps.ToArray()));
+                                break;
+                            case DataType.Double:
+                                var doubData = new List<double?>();
+                                foreach (string col in (string[])csvColumns[i])
+                                {
+                                    int count = 0;
+                                    foreach (string item in col?.Split(csvSep[0]))
+                                    {
+                                        doubData.Add(GetDoubleValueNullable(item, config.GetConfigValue(fields[i].Name)));
+                                        reps.Add(count == 0 ? 0 : 1);
+                                        count++;
+                                    }
+
+                                    if (count == 0)
+                                    {
+                                        doubData.Add(null);
+                                        reps.Add(0);
+                                    }
+                                }
+                                rg.WriteColumn(new DataColumn(fields[i], doubData.ToArray(), reps.ToArray()));
+                                break;
+                            case DataType.Float:
+                                var flData = new List<float?>();
+                                foreach (string col in (string[])csvColumns[i])
+                                {
+                                    int count = 0;
+                                    foreach (string item in col?.Split(csvSep[0]))
+                                    {
+                                        flData.Add(GetFloatValueNullable(item, config.GetConfigValue(fields[i].Name)));
+                                        reps.Add(count == 0 ? 0 : 1);
+                                        count++;
+                                    }
+
+                                    if (count == 0)
+                                    {
+                                        flData.Add(null);
+                                        reps.Add(0);
+                                    }
+                                }
+                                rg.WriteColumn(new DataColumn(fields[i], flData.ToArray(), reps.ToArray()));
+                                break;
+                            case DataType.Int16:
+                                var i16Data = new List<Int32?>();
+                                foreach (string col in (string[])csvColumns[i])
+                                {
+                                    int count = 0;
+                                    foreach (string item in col?.Split(csvSep[0]))
+                                    {
+                                        i16Data.Add(GetInt16ValueNullable(item));
+                                        reps.Add(count == 0 ? 0 : 1);
+                                        count++;
+                                    }
+
+                                    if (count == 0)
+                                    {
+                                        i16Data.Add(null);
+                                        reps.Add(0);
+                                    }
+                                }
+                                // reps: 0 means that this is a start of an array and 1 - it's a value continuation.
+                                rg.WriteColumn(new DataColumn(fields[i], i16Data.ToArray(), reps.ToArray()));
+                                break;
+                            case DataType.Int32:
+                                var i32Data = new List<Int32?>();
+                                foreach (string col in (string[])csvColumns[i])
+                                {
+                                    int count = 0;
+                                    foreach (string item in col?.Split(csvSep[0]))
+                                    {
+                                        i32Data.Add(GetInt32ValueNullable(item));
+                                        reps.Add(count == 0 ? 0 : 1);
+                                        count++;
+                                    }
+
+                                    if (count == 0)
+                                    {
+                                        i32Data.Add(null);
+                                        reps.Add(0);
+                                    }
+                                }
+                                // reps: 0 means that this is a start of an array and 1 - it's a value continuation.
+                                rg.WriteColumn(new DataColumn(fields[i], i32Data.ToArray(), reps.ToArray()));
+                                break;
+                            case DataType.Int64:
+                                var i64Data = new List<Int64?>();
+                                foreach (string col in (string[])csvColumns[i])
+                                {
+                                    int count = 0;
+                                    foreach (string item in col?.Split(csvSep[0]))
+                                    {
+                                        i64Data.Add(GetInt64ValueNullable(item));
+                                        reps.Add(count == 0 ? 0 : 1);
+                                        count++;
+                                    }
+
+                                    if (count == 0)
+                                    {
+                                        i64Data.Add(null);
+                                        reps.Add(0);
+                                    }
+                                }
+                                rg.WriteColumn(new DataColumn(fields[i], i64Data.ToArray(), reps.ToArray()));
+                                break;
+                            case DataType.String:
+                                var strData = new List<string>();
+                                foreach (string col in (string[])csvColumns[i])
+                                {
+                                    int count = 0;
+
+                                    foreach (string item in col?.Split(csvSep[0]))
+                                    {
+                                        // TODO: implement null if needed
+                                        strData.Add(item);
+                                        reps.Add(count == 0 ? 0 : 1);
+                                        count++;
+                                    }
+                                    
+                                    if (count == 0)
+                                    {
+                                        strData.Add(null);
+                                        reps.Add(0);
+                                    }
+                                }
+                                rg.WriteColumn(new DataColumn(fields[i], strData.ToArray(), reps.ToArray()));
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException(fields[i].DataType.ToString());
+                        }
+                    } else if (fields[i].HasNulls)
                     {
                         switch (fields[i].DataType)
                         {
@@ -99,7 +294,7 @@ namespace Frends.Community.Apache.Parquet
         }
 
         /// <summary>
-        /// Return CultureInfo for given cultero or fi-FI
+        /// Return CultureInfo for given culture or fi-FI
         /// </summary>
         /// <param name="culture">Culture name</param>
         /// <returns>CultureInfo</returns>
@@ -112,6 +307,10 @@ namespace Frends.Community.Apache.Parquet
             }
             else
             {
+                if( culture == "InvariantCulture")
+                {
+                    return System.Globalization.CultureInfo.InvariantCulture;
+                }
                 return new CultureInfo(culture);
             }
         }
@@ -128,6 +327,31 @@ namespace Frends.Community.Apache.Parquet
                 return Int16.Parse(value);
             }
             return null;
+        }
+
+        /// <summary>
+        /// Parse Int32 array or return null if it is empty
+        /// </summary>
+        /// <param name="value">Int32 array as string</param>
+        /// <param name="csvsep">A character that delimist the int strings</param>
+        /// <returns>Int32?[] array</returns>
+        public static Int32?[] GetInt32ValueArrayNullable(string value, char csvsep = '|')
+        {
+            var results = new List<Int32?>();
+
+            foreach (var elem in value.Split(csvsep))
+            {
+                if (!String.IsNullOrWhiteSpace(elem))
+                {
+                    Int32? val = Int32.Parse(elem);
+                    results.Add(val);
+                }
+                else
+                {
+                    results.Add(null);
+                }
+            }
+            return results.ToArray();
         }
 
         /// <summary>
@@ -164,11 +388,25 @@ namespace Frends.Community.Apache.Parquet
         /// <param name="value">float as string</param>
         /// <param name="culture">Optional CultureInfo object</param>
         /// <returns>float</returns>
-        public static float? GetFloatValue(string value, string culture)
+        public static float? GetFloatValueNullable(string value, string culture)
         {
             if (!String.IsNullOrWhiteSpace(value))
             {
                 return float.Parse(value, Writer.GetCultureInfo(culture));
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Parse float or return null if value is empty
+        /// </summary>
+        /// <param name="value">float as string</param>
+        /// <returns>float</returns>
+        public static float? GetFloatValueNullable(string value)
+        {
+            if (!String.IsNullOrWhiteSpace(value))
+            {
+                return float.Parse(value);
             }
             return null;
         }
@@ -189,6 +427,20 @@ namespace Frends.Community.Apache.Parquet
         }
 
         /// <summary>
+        /// Parse decimal or return null if value is empty
+        /// </summary>
+        /// <param name="value">decimal as string</param>
+        /// <returns>decimal</returns>
+        public static decimal? GetDecimalValueNullable(string value)
+        {
+            if (!String.IsNullOrWhiteSpace(value))
+            {
+                return decimal.Parse(value);
+            }
+            return null;
+        }
+
+        /// <summary>
         /// Parse double or return null if value is empty
         /// </summary>
         /// <param name="value">double as string</param>
@@ -199,6 +451,21 @@ namespace Frends.Community.Apache.Parquet
             if (!String.IsNullOrWhiteSpace(value))
             {
                 return double.Parse(value, Writer.GetCultureInfo(culture));
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Parse double or return null if value is empty
+        /// </summary>
+        /// <param name="value">double as string</param>
+
+        /// <returns>double</returns>
+        public static double? GetDoubleValueNullable(string value)
+        {
+            if (!String.IsNullOrWhiteSpace(value))
+            {
+                return double.Parse(value);
             }
             return null;
         }

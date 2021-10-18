@@ -14,8 +14,9 @@ namespace Frends.Community.Apache.Parquet
         /// Creates config data structure for later use
         /// </summary>
         /// <param name="json">JSON configuration</param>
+        /// <param name="globalCulture">Default culture if set (for json)</param>
         /// <returns>Config dictionary</returns>
-        public Config(JToken json)
+        public Config(JToken json, string globalCulture)
         {
             _config = new Dictionary<string, string>();
 
@@ -34,7 +35,15 @@ namespace Frends.Community.Apache.Parquet
                 // Culture overwrites format. (decimals, floats and doubles)
                 if (!String.IsNullOrWhiteSpace(culture))
                 {
-                    format = culture;
+                    // the local parameter overwrites the global parameter
+                    if (!String.IsNullOrWhiteSpace(culture))
+                    {
+                        format = culture;
+                    }
+                    else
+                    { 
+                        format = globalCulture;
+                    }
                 }
 
                 _config[name] = format;

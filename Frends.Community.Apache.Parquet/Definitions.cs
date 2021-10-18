@@ -26,7 +26,7 @@ namespace Frends.Community.Apache.Parquet
         /// </summary>
         [DisplayFormat(DataFormatString = "Text")]
         [DefaultValue(@"C:\temp\test.csv")]
-        public string CsvFileName { get; set; }
+        public string FileName { get; set; }
 
         /// <summary>
         /// Output filename
@@ -66,6 +66,22 @@ namespace Frends.Community.Apache.Parquet
         /// </summary>
         [DefaultValue(false)]
         public bool CountRowsBeforeProcessing { get; set; } = false;
+    }
+
+    public class WriteParquetOptionsJSON
+    {
+        /// <summary>
+        /// Parquet files row group size. Batch size should be large enough
+        /// because of perfomance later
+        /// </summary>
+        [DefaultValue("5000")]
+        public long ParquetRowGroupSize { get; set; } = 5000;
+
+        /// <summary>
+        /// Parquet Compression type: None / Snappy / GZip (smallest filesize)
+        /// </summary>
+        [DefaultValue(CompressionType.Gzip)]
+        public CompressionType ParquetCompressionMethod { get; set; } = CompressionType.Gzip;
     }
 
     public class WriteCSVOptions
@@ -118,6 +134,23 @@ namespace Frends.Community.Apache.Parquet
         public string EncodingInString { get; set; }
     }
 
+    public class WriteJSONOptions
+    {
+        /// <summary>
+        /// Encoding for the written content. By selecting 'Other' you can use any encoding.
+        /// </summary>
+        public FileEncoding FileEncoding { get; set; }
+
+        [UIHint(nameof(FileEncoding), "", FileEncoding.UTF8)]
+        public bool EnableBom { get; set; }
+
+        /// <summary>
+        /// File encoding to be used. A partial list of possible encodings: https://en.wikipedia.org/wiki/Windows_code_page#List
+        /// </summary>
+        [UIHint(nameof(FileEncoding), "", FileEncoding.Other)]
+        [DisplayFormat(DataFormatString = "Text")]
+        public string EncodingInString { get; set; }
+    }
     public class WriteResult
     {
         /// <summary>
