@@ -30,7 +30,7 @@ Converts CSV file to Parquet format using given metadata.
 | -------- | -------- | -------- | -------- |
 | Schema | json | Schema for CSV data. Types: boolean, datetime, datetimeoffset, decimal, double, float, int16, int, int32, int64, string and unspecified where ? means nullable column. Special characters are not allowed in column names. (Eg. characters '. ,;{}()=' have proven to be problematic.). Array syntax is array\<type\>. | [  {"name": "Id", "type": "int"}, {"name": "Name", "type": "string"}, {"name": "Desc", "type": "string?"}, {"name": "number", "type": "decimal?", "culture": "en-US"}, {"name": "IntArray", "type": "array\<Int32\>"} ] |
 | CSV Filename | string |  Full path to the file to be read. | c:\temp\test.csv |
-| Output Filename | string |Full path to the file to be write. | 'UseDevelopmentStorage=true' |
+| Output Filename | string |Full path to the file to be write. | c:\temp\test.parquet |
 | Throw exception on error response | bool | Do not handle exceptions if set true. Otherwise catch exception and return error message. | true |
 
 Note: Decimals, floats and doubles have "fi-FI" default culture. Decimal separator is ",". Array's items are combined with "|", eg. "1|2|3".
@@ -74,7 +74,7 @@ Converts JSON file to Parquet format using given metadata. Json structure must b
 | -------- | -------- | -------- | -------- |
 | Schema | json | Schema for CSV data. Types: boolean, datetime, datetimeoffset, decimal, double, float, int16, int, int32, int64, string and unspecified where ? means nullable column. Special characters are not allowed in column names. (Eg. characters '. ,;{}()=' have proven to be problematic.). | [  {"name": "Id", "type": "int"}, {"name": "Name", "type": "string"}, {"name": "Desc", "type": "string?"}, {"name": "number", "type": "decimal?"}, {"name": "IntArray", "type": "array\<Int32\>"} ] |
 | JSON Filename | string |  Full path to the file to be read. | c:\temp\test.json |
-| Output Filename | string |Full path to the file to be write. | 'UseDevelopmentStorage=true' |
+| Output Filename | string |Full path to the file to be write. | c:\temp\test.parquet |
 | Throw exception on error response | bool | Do not handle exceptions if set true. Otherwise catch exception and return error message. | true |
 
 Note: Decimals, floats and doubles have InvarianCultere as default culture (Decimal separator is "."). Do NOT set culture without testing.
