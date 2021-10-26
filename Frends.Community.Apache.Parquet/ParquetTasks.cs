@@ -353,6 +353,7 @@ namespace Frends.Community.Apache.Parquet
                         }
 
                         long dataIndex = 0;
+                        int colIndex = 0;
 
                         try
                         {
@@ -362,6 +363,7 @@ namespace Frends.Community.Apache.Parquet
                                 // Insert data to structure
                                 for (int i = 0; i < colCount; i++)
                                 {
+                                    colIndex = i;
                                     if (dataFields[i].IsArray)
                                     {
                                         // data must be array
@@ -441,7 +443,7 @@ namespace Frends.Community.Apache.Parquet
                                                 ((string[])jsonColumns[i])[dataIndex] = value;
                                                 break;
                                             default:
-                                                throw new ArgumentOutOfRangeException("CSV memory writer: Cannot identify datatype.");
+                                                throw new ArgumentOutOfRangeException("CSV memory writer: Cannot identify datatype. Property: " + dataFields[colIndex].Name);
                                         }
                                         
                                     }
@@ -499,7 +501,7 @@ namespace Frends.Community.Apache.Parquet
                                                 ((string[])jsonColumns[i])[dataIndex] = value;
                                                 break;
                                             default:
-                                                throw new ArgumentOutOfRangeException("CSV memory writer: Cannot identify datatype.");
+                                                throw new ArgumentOutOfRangeException("CSV memory writer: Cannot identify datatype. Property: " + dataFields[colIndex].Name);
                                         }
                                     }
                                 }
@@ -521,7 +523,7 @@ namespace Frends.Community.Apache.Parquet
                         }
                         catch (Exception e)
                         {
-                            throw new Exception($"File processing error in row {dataIndex + 1}", e);
+                            throw new Exception($"File processing error in row {dataIndex + 1}, property: {dataFields[colIndex].Name}", e);
                         }
 
                         // Write non-empty data structure

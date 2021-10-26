@@ -202,9 +202,9 @@ namespace Frends.Community.Apache.Parquet.Tests
                                 {""name"": ""ABool"", ""type"": ""array<boolean>""},
                                 {""name"": ""ADatetime"", ""type"": ""array<datetime>"", ""format"": ""dd.MM.yyyy""},
                                 {""name"": ""AoffsetDatetime"", ""type"": ""array<datetimeoffset>"",""format"": ""yyyy-MM-ddTHH:mm:sszzz""},
-                                {""name"": ""ADecimal"", ""type"": ""array<double>""},
-                                {""name"": ""ADouble"", ""type"": ""array<double>""},
-                                {""name"": ""AFloat"", ""type"": ""array<float>""},
+                                {""name"": ""ADecimal"", ""type"": ""array<double>"", ""culture"": ""InvariantCulture""},
+                                {""name"": ""ADouble"", ""type"": ""array<double>"", ""culture"": ""InvariantCulture""},
+                                {""name"": ""AFloat"", ""type"": ""array<float>"", ""culture"": ""InvariantCulture""},
                                 {""name"": ""AInt64"", ""type"": ""array<int64>""},
                                 {""name"": ""AInt16"", ""type"": ""array<int32>""}
                             
