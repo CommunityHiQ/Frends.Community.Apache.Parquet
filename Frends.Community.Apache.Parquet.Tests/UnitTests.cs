@@ -1,15 +1,21 @@
 using NUnit.Framework;
 using Parquet;
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Par = Parquet;
 
 namespace Frends.Community.Apache.Parquet.Tests
 {
     public class Tests
     {
+        // culture
+        private CultureInfo _currCulture;
+        private CultureInfo _currUICulture;
+
         // File paths
         private static readonly string _basePath = Path.GetTempPath();
         private readonly string _inputCsvFileName = Path.Combine(_basePath, "testi-csv-" + Path.GetRandomFileName());
@@ -38,9 +44,14 @@ namespace Frends.Community.Apache.Parquet.Tests
                                 { ""name"": ""Description"", ""type"": ""string?""},
                             ]";
 
+
         [SetUp]
         public void Setup()
         {
+            _currCulture = CultureInfo.CurrentCulture;
+            _currUICulture = CultureInfo.CurrentUICulture;
+
+
             // Write csv test file
             File.WriteAllText(_inputCsvFileName, @"Id;Date;Decimal;Text
 1;01.10.2019;5.0;Testirivi 1
@@ -260,9 +271,28 @@ namespace Frends.Community.Apache.Parquet.Tests
         }
        
         [Test]
-        public void ArrayTest2()
+        public void ArrayTestDecimals()
+        {
+            ArrayTestDecimalsBase("en-GB");
+        }
+
+        [Test]
+        public void ArrayTestDecimalsMultiple()
+        {
+            ArrayTestDecimalsBase("fi-FI");
+            ArrayTestDecimalsBase("en-US");
+            ArrayTestDecimalsBase("se-SV");
+        }
+
+
+
+        public void ArrayTestDecimalsBase(string culture)
         {
             TestTools.RemoveOutputFile(_outputFileName);
+
+            CultureInfo ci = new CultureInfo(culture);
+            Thread.CurrentThread.CurrentCulture = ci;
+            Thread.CurrentThread.CurrentUICulture = ci;
 
             var options = new WriteCSVOptions()
             {
@@ -303,6 +333,18 @@ namespace Frends.Community.Apache.Parquet.Tests
             };
    
             ParquetTasks.ConvertCsvToParquet(input, options, poptions, new System.Threading.CancellationToken());
+
+            Thread.CurrentThread.CurrentCulture = _currCulture;
+            Thread.CurrentThread.CurrentUICulture = _currUICulture;
+
+            Assert.AreEqual("21", Tests.ReturnParquetValue(_outputFileName, 3, 1));
+            Assert.AreEqual("71|72|73|74|74", Tests.ReturnParquetValue(_outputFileName, 3, 6));
+
+            Assert.AreEqual("Yksi2", Tests.ReturnParquetValue(_outputFileName, 4, 1));
+            Assert.AreEqual("Yksi7|Kaksi7|Kolme7|Neljä7", Tests.ReturnParquetValue(_outputFileName, 4, 6));
+
+            Assert.AreEqual("2.2345", Tests.ReturnParquetValue(_outputFileName, 8, 1));
+            Assert.AreEqual("7.1345123|7.2|7.31232424|7.4444444441|7.512345678912346", Tests.ReturnParquetValue(_outputFileName, 8, 6));
 
             var hash = TestTools.MD5Hash(_outputFileName);
             Assert.AreEqual("a6cc0c1b414467a3c10708be30361ed6", hash, "File checksum didn't match.");
