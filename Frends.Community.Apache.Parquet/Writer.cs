@@ -88,7 +88,7 @@ namespace Frends.Community.Apache.Parquet
                                         int count = 0;
                                         foreach (string item in col?.Split(csvSep[0]))
                                         {
-                                            decData.Add(GetDecimalValueNullable(item, config.GetConfigValue(fields[i].Name)));
+                                            decData.Add(GetDecimalValueNullable(item, config.GetConfigValue(fields[i].Name, "InvariantCulture")));
                                             reps.Add(count == 0 ? 0 : 1);
                                             count++;
                                             rowCount = count;
@@ -109,7 +109,7 @@ namespace Frends.Community.Apache.Parquet
                                         int count = 0;
                                         foreach (string item in col?.Split(csvSep[0]))
                                         {
-                                            doubData.Add(GetDoubleValueNullable(item, config.GetConfigValue(fields[i].Name)));
+                                            doubData.Add(GetDoubleValueNullable(item, config.GetConfigValue(fields[i].Name, "InvariantCulture")));
                                             reps.Add(count == 0 ? 0 : 1);
                                             count++;
                                             rowCount = count;
@@ -130,7 +130,7 @@ namespace Frends.Community.Apache.Parquet
                                         int count = 0;
                                         foreach (string item in col?.Split(csvSep[0]))
                                         {
-                                            flData.Add(GetFloatValueNullable(item, config.GetConfigValue(fields[i].Name)));
+                                            flData.Add(GetFloatValueNullable(item, config.GetConfigValue(fields[i].Name, "InvariantCulture")));
                                             reps.Add(count == 0 ? 0 : 1);
                                             count++;
                                             rowCount = count;

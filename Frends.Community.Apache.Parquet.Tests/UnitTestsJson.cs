@@ -1,8 +1,10 @@
 ﻿using NUnit.Framework;
 using Parquet;
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Par = Parquet;
 
 
@@ -10,7 +12,11 @@ namespace Frends.Community.Apache.Parquet.Tests
 {
     public class TestsJson
     {
-        // File paths
+        // culture
+        private CultureInfo _currCulture;
+        private CultureInfo _currUICulture;
+
+        // File paths       
         private static readonly string _basePath = Path.GetTempPath();
         private readonly string _inputJsonFileName = Path.Combine(_basePath, "testi-json-" + Path.GetRandomFileName());
         private readonly string _inputJsonFileNameArray = Path.Combine(_basePath, "testi-array-json-" + Path.GetRandomFileName());
@@ -20,6 +26,9 @@ namespace Frends.Community.Apache.Parquet.Tests
         private readonly string _inputJsonFileNameArray2 = Path.Combine(_basePath, "testi-array2-csv-" + Path.GetRandomFileName());
         private readonly string _inputJsonFileNameArrayLarge = Path.Combine(_basePath, "testi-array3-csv-" + Path.GetRandomFileName());
         private readonly string _outputFileName = Path.Combine(_basePath, "testi-parquet-" + Path.GetRandomFileName());
+
+
+
 
         private const string _commonSchema = @"[
     { ""name"": ""Id"", ""type"": ""int?""},
@@ -39,6 +48,10 @@ namespace Frends.Community.Apache.Parquet.Tests
         [SetUp]
         public void Setup()
         {
+            _currCulture = CultureInfo.CurrentCulture;
+            _currUICulture = CultureInfo.CurrentUICulture;
+
+
             File.WriteAllText(_inputJsonFileName, @"[
     { ""Id"": 1, ""Time"": ""01.10.2019"", ""Decimal"": 5.0, ""Description"": ""Testirivi 1"" },
     { ""Id"": 1, ""Time"": ""15.04.2018"", ""Decimal"": 3.5, ""Description"": ""Testirivi 2 - pidempi teksti ja ääkkösiä"" },
@@ -50,8 +63,8 @@ namespace Frends.Community.Apache.Parquet.Tests
 ]");
             File.WriteAllText(_inputJsonFileNameDecDot, @"[
     { ""Id"": 1, ""Decimal"": 12345.6789, ""Float"": 12345.6789, ""Double"": 12345.6789 },
-    { ""Id"": 2, ""Decimal"": 2.3, ""Float"": 2.3, ""Double"": 2.3 },
-    { ""Id"": 3, ""Decimal"": 4.4, ""Float"": 4.4, ""Double"": 4.4 }
+    { ""Id"": 2, ""Decimal"": 2.3, ""Float"": 2.4, ""Double"": 2.5 },
+    { ""Id"": 3, ""Decimal"": 4.51, ""Float"": 4.62, ""Double"": 4.73 }
 ]");
 
             File.WriteAllText(_inputJsonFileNameNoNulls, @"[
@@ -137,9 +150,26 @@ namespace Frends.Community.Apache.Parquet.Tests
         }
 
         [Test]
-        public void ArrayTest1()
+        public void ArrayTestIntString()
+        {
+            ArrayTestIntStringBase("en-GB");
+        }
+
+        [Test]
+        public void ArrayTestIntStringMultiple()
+        {
+            ArrayTestIntStringBase("fi-FI");
+            ArrayTestIntStringBase("en-US");
+            ArrayTestIntStringBase("se-SV");
+        }
+
+        public void ArrayTestIntStringBase(string culture)
         {
             TestTools.RemoveOutputFile(_outputFileName);
+
+            CultureInfo ci = new CultureInfo(culture);
+            Thread.CurrentThread.CurrentCulture = ci;
+            Thread.CurrentThread.CurrentUICulture = ci;
 
             var options = new WriteJSONOptions()
             {
@@ -165,15 +195,37 @@ namespace Frends.Community.Apache.Parquet.Tests
             
 
             ParquetTasks.ConvertJsonToParquet(input, options, poptions, new System.Threading.CancellationToken());
+            Thread.CurrentThread.CurrentCulture = _currCulture;
+            Thread.CurrentThread.CurrentUICulture = _currUICulture;
 
             var hash = TestTools.MD5Hash(_outputFileName);
             Assert.IsTrue(hash == "92bcd1ec5c22d943b30a383010020da5", "File checksum didn't match.");
         }
 
         [Test]
-        public void ArrayTest2()
+        public void ArrayTestDecimals()
+        {
+            ArrayTestDecimalsBase("en-GB");
+        }
+
+        [Test]
+        public void ArrayTestDecimalsMultiple()
+        {
+            ArrayTestDecimalsBase("fi-FI");
+            ArrayTestDecimalsBase("en-US");
+            ArrayTestDecimalsBase("se-SV");
+
+        }
+
+
+        private void ArrayTestDecimalsBase(string culture)
         {
             TestTools.RemoveOutputFile(_outputFileName);
+
+            // Test array decimals
+            CultureInfo ci = new CultureInfo(culture);
+            Thread.CurrentThread.CurrentCulture = ci;
+            Thread.CurrentThread.CurrentUICulture = ci;
 
             var options = new WriteJSONOptions()
             {
@@ -203,8 +255,8 @@ namespace Frends.Community.Apache.Parquet.Tests
                                 {""name"": ""ADatetime"", ""type"": ""array<datetime>"", ""format"": ""dd.MM.yyyy""},
                                 {""name"": ""AoffsetDatetime"", ""type"": ""array<datetimeoffset>"",""format"": ""yyyy-MM-ddTHH:mm:sszzz""},
                                 {""name"": ""ADecimal"", ""type"": ""array<double>"", ""culture"": ""InvariantCulture""},
-                                {""name"": ""ADouble"", ""type"": ""array<double>"", ""culture"": ""InvariantCulture""},
-                                {""name"": ""AFloat"", ""type"": ""array<float>"", ""culture"": ""InvariantCulture""},
+                                {""name"": ""ADouble"", ""type"": ""array<double>""},
+                                {""name"": ""AFloat"", ""type"": ""array<float>"" },
                                 {""name"": ""AInt64"", ""type"": ""array<int64>""},
                                 {""name"": ""AInt16"", ""type"": ""array<int32>""}
                             
@@ -212,6 +264,9 @@ namespace Frends.Community.Apache.Parquet.Tests
             };
 
             ParquetTasks.ConvertJsonToParquet(input, options, poptions, new System.Threading.CancellationToken());
+
+            Thread.CurrentThread.CurrentCulture = _currCulture;
+            Thread.CurrentThread.CurrentUICulture = _currUICulture;
 
 
             Assert.AreEqual("21", Tests.ReturnParquetValue(_outputFileName, 3, 1));
@@ -227,19 +282,52 @@ namespace Frends.Community.Apache.Parquet.Tests
             Assert.AreEqual("08f4d0dd5ffd8c214d20906dea423a98", hash, "File checksum didn't match.");
         }
 
+     
+
         /// <summary>
         /// Now cultere is empty -> default should be CultureInfo.InvariantCulture
         /// </summary>
         [Test]
         public void DecimalTestDefault()
         {
+            DecimalTestDefaultBase("en-GB");
+        }
+        
+        /// <summary>
+        /// Now cultere is empty -> default should be CultureInfo.InvariantCulture
+        /// </summary>
+        [Test]
+        public void DecimalTestDefault_Multiple()
+        {
+            DecimalTestDefaultBase("fi-FI");
+            DecimalTestDefaultBase("en-US");
+            DecimalTestDefaultBase("sv-SE");
+        }
+
+        private void DecimalTestDefaultBase(string culture)
+        {
             TestTools.RemoveOutputFile(_outputFileName);
+
+            CultureInfo ci = new CultureInfo(culture);
+            Thread.CurrentThread.CurrentCulture = ci;
+            Thread.CurrentThread.CurrentUICulture = ci;
             RunDecimalTestNormal("", _inputJsonFileNameDecDot);
+            Thread.CurrentThread.CurrentCulture = _currCulture;
+            Thread.CurrentThread.CurrentUICulture = _currUICulture;
             //var hash = TestTools.MD5Hash(_outputFileName);
 
             Assert.AreEqual(12345.6789m, Tests.ReturnParquetValue(_outputFileName, 1, 0));
             Assert.AreEqual(12345.6789f, Tests.ReturnParquetValue(_outputFileName, 2, 0));
             Assert.AreEqual(12345.6789d, Tests.ReturnParquetValue(_outputFileName, 3, 0));
+
+            Assert.AreEqual(2.3m, Tests.ReturnParquetValue(_outputFileName, 1, 1));
+            Assert.AreEqual(2.4f, Tests.ReturnParquetValue(_outputFileName, 2, 1));
+            Assert.AreEqual(2.5d, Tests.ReturnParquetValue(_outputFileName, 3, 1));
+
+            Assert.AreEqual(4.51m, Tests.ReturnParquetValue(_outputFileName, 1, 2));
+            Assert.AreEqual(4.62f, Tests.ReturnParquetValue(_outputFileName, 2, 2));
+            Assert.AreEqual(4.73d, Tests.ReturnParquetValue(_outputFileName, 3, 2));
+
         }
 
 
@@ -361,12 +449,29 @@ namespace Frends.Community.Apache.Parquet.Tests
             Assert.AreEqual("e5584fe7a1a3ebb7e3a8de165d431e4c", hash, "File checksum didn't match." + hash);
         }
 
-       
+
+        [Test]
+        public void ArrayGetValuesMultiple()
+        {
+            ArrayGetValuesBase("fi-FI");
+            ArrayGetValuesBase("en-US");
+            ArrayGetValuesBase("se-SV");
+        }
 
         [Test]
         public void ArrayGetValues()
         {
+            ArrayGetValuesBase("en-GB");
+        }
+
+        private void ArrayGetValuesBase(string culture)
+        { 
+
             TestTools.RemoveOutputFile(_outputFileName);
+
+            CultureInfo ci = new CultureInfo("fi-FI");
+            Thread.CurrentThread.CurrentCulture = ci;
+            Thread.CurrentThread.CurrentUICulture = ci;
 
             var options = new WriteJSONOptions()
             {
@@ -390,6 +495,8 @@ namespace Frends.Community.Apache.Parquet.Tests
             };
 
             ParquetTasks.ConvertJsonToParquet(input, options, poptions, new System.Threading.CancellationToken());
+            Thread.CurrentThread.CurrentCulture = _currCulture;
+            Thread.CurrentThread.CurrentUICulture = _currUICulture;
 
             Assert.AreEqual(null, Tests.ReturnParquetValue(_outputFileName, 1, 0));
             Assert.AreEqual("21", Tests.ReturnParquetValue(_outputFileName, 1, 1));

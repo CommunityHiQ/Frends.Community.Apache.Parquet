@@ -59,5 +59,23 @@ namespace Frends.Community.Apache.Parquet
         {
             return _config[key];
         }
+
+        /// <summary>
+        /// Returns value from config using key. If key is empty, returns default value
+        /// </summary>
+        /// <param name="key">key</param>
+        /// <param name="defaultValue">default value</param>
+        /// <returns>value</returns>
+        public string GetConfigValue(string key, string defaultValue)
+        {
+            if (String.IsNullOrEmpty(_config[key]))
+            {
+                return defaultValue;
+            } 
+            else
+            {
+                return _config[key];
+            }
+        }
     }
 }
