@@ -23,273 +23,295 @@ namespace Frends.Community.Apache.Parquet
         public static void WriteGroup(List<Object> csvColumns, ParquetWriter writer, List<DataField> fields, Config config)
         {
             string csvSep =  "|";
-            using (ParquetRowGroupWriter rg = writer.CreateRowGroup())
+            int fieldCount = 0;
+            int rowCount = -1;
+
+            try
             {
-                for (int i = 0; i < fields.Count; i++)
+                using (ParquetRowGroupWriter rg = writer.CreateRowGroup())
                 {
-                    if( fields[i].IsArray)
+                    for (int i = 0; i < fields.Count; i++)
                     {
-                        var reps = new List<int>();
-                        switch (fields[i].DataType)
+                        fieldCount = i;
+                        rowCount = -1;
+                        if (fields[i].IsArray)
                         {
-                            case DataType.Boolean:
-                                var boolData = new List<bool?>();
-                                foreach (string col in (string[])csvColumns[i])
-                                {
-                                    int count = 0;
-                                    foreach (string item in col?.Split(csvSep[0]))
+                            var reps = new List<int>();
+                            switch (fields[i].DataType)
+                            {
+                                case DataType.Boolean:
+                                    var boolData = new List<bool?>();
+                                    foreach (string col in (string[])csvColumns[i])
                                     {
-                                        boolData.Add(GetBooleanValueNullable(item));
-                                        reps.Add(count == 0 ? 0 : 1);
-                                        count++;
-                                    }
+                                        int count = 0;
+                                        foreach (string item in col?.Split(csvSep[0]))
+                                        {
+                                            boolData.Add(GetBooleanValueNullable(item));
+                                            reps.Add(count == 0 ? 0 : 1);
+                                            count++;
+                                            rowCount = count;
+                                        }
 
-                                    if (count == 0)
-                                    {
-                                        boolData.Add(null);
-                                        reps.Add(0);
+                                        if (count == 0)
+                                        {
+                                            boolData.Add(null);
+                                            reps.Add(0);
+                                        }
                                     }
-                                }
-                                rg.WriteColumn(new DataColumn(fields[i], boolData.ToArray(), reps.ToArray()));
-                                break;
-                            case DataType.DateTimeOffset:
-                                var dtData = new List<DateTimeOffset?>();
-                                foreach (string col in (string[])csvColumns[i])
-                                {
-                                    int count = 0;
-                                    foreach (string item in col?.Split(csvSep[0]))
+                                    rg.WriteColumn(new DataColumn(fields[i], boolData.ToArray(), reps.ToArray()));
+                                    break;
+                                case DataType.DateTimeOffset:
+                                    var dtData = new List<DateTimeOffset?>();
+                                    foreach (string col in (string[])csvColumns[i])
                                     {
-                                        dtData.Add(GetDateTimeOffsetValueNullable(item, config.GetConfigValue(fields[i].Name)));
-                                        reps.Add(count == 0 ? 0 : 1);
-                                        count++;
-                                    }
+                                        int count = 0;
+                                        foreach (string item in col?.Split(csvSep[0]))
+                                        {
+                                            dtData.Add(GetDateTimeOffsetValueNullable(item, config.GetConfigValue(fields[i].Name)));
+                                            reps.Add(count == 0 ? 0 : 1);
+                                            count++;
+                                            rowCount = count;
+                                        }
 
-                                    if (count == 0)
-                                    {
-                                        dtData.Add(null);
-                                        reps.Add(0);
+                                        if (count == 0)
+                                        {
+                                            dtData.Add(null);
+                                            reps.Add(0);
+                                        }
                                     }
-                                }
-                                rg.WriteColumn(new DataColumn(fields[i], dtData.ToArray(), reps.ToArray()));
-                                break;
-                            case DataType.Decimal:
-                                var decData = new List<Decimal?>();
-                                foreach (string col in (string[])csvColumns[i])
-                                {
-                                    int count = 0;
-                                    foreach (string item in col?.Split(csvSep[0]))
+                                    rg.WriteColumn(new DataColumn(fields[i], dtData.ToArray(), reps.ToArray()));
+                                    break;
+                                case DataType.Decimal:
+                                    var decData = new List<Decimal?>();
+                                    foreach (string col in (string[])csvColumns[i])
                                     {
-                                        decData.Add(GetDecimalValueNullable(item, config.GetConfigValue(fields[i].Name)));
-                                        reps.Add(count == 0 ? 0 : 1);
-                                        count++;
-                                    }
+                                        int count = 0;
+                                        foreach (string item in col?.Split(csvSep[0]))
+                                        {
+                                            decData.Add(GetDecimalValueNullable(item, config.GetConfigValue(fields[i].Name, "InvariantCulture")));
+                                            reps.Add(count == 0 ? 0 : 1);
+                                            count++;
+                                            rowCount = count;
+                                        }
 
-                                    if (count == 0)
-                                    {
-                                        decData.Add(null);
-                                        reps.Add(0);
+                                        if (count == 0)
+                                        {
+                                            decData.Add(null);
+                                            reps.Add(0);
+                                        }
                                     }
-                                }
-                                rg.WriteColumn(new DataColumn(fields[i], decData.ToArray(), reps.ToArray()));
-                                break;
-                            case DataType.Double:
-                                var doubData = new List<double?>();
-                                foreach (string col in (string[])csvColumns[i])
-                                {
-                                    int count = 0;
-                                    foreach (string item in col?.Split(csvSep[0]))
+                                    rg.WriteColumn(new DataColumn(fields[i], decData.ToArray(), reps.ToArray()));
+                                    break;
+                                case DataType.Double:
+                                    var doubData = new List<double?>();
+                                    foreach (string col in (string[])csvColumns[i])
                                     {
-                                        doubData.Add(GetDoubleValueNullable(item, config.GetConfigValue(fields[i].Name)));
-                                        reps.Add(count == 0 ? 0 : 1);
-                                        count++;
-                                    }
+                                        int count = 0;
+                                        foreach (string item in col?.Split(csvSep[0]))
+                                        {
+                                            doubData.Add(GetDoubleValueNullable(item, config.GetConfigValue(fields[i].Name, "InvariantCulture")));
+                                            reps.Add(count == 0 ? 0 : 1);
+                                            count++;
+                                            rowCount = count;
+                                        }
 
-                                    if (count == 0)
-                                    {
-                                        doubData.Add(null);
-                                        reps.Add(0);
+                                        if (count == 0)
+                                        {
+                                            doubData.Add(null);
+                                            reps.Add(0);
+                                        }
                                     }
-                                }
-                                rg.WriteColumn(new DataColumn(fields[i], doubData.ToArray(), reps.ToArray()));
-                                break;
-                            case DataType.Float:
-                                var flData = new List<float?>();
-                                foreach (string col in (string[])csvColumns[i])
-                                {
-                                    int count = 0;
-                                    foreach (string item in col?.Split(csvSep[0]))
+                                    rg.WriteColumn(new DataColumn(fields[i], doubData.ToArray(), reps.ToArray()));
+                                    break;
+                                case DataType.Float:
+                                    var flData = new List<float?>();
+                                    foreach (string col in (string[])csvColumns[i])
                                     {
-                                        flData.Add(GetFloatValueNullable(item, config.GetConfigValue(fields[i].Name)));
-                                        reps.Add(count == 0 ? 0 : 1);
-                                        count++;
-                                    }
+                                        int count = 0;
+                                        foreach (string item in col?.Split(csvSep[0]))
+                                        {
+                                            flData.Add(GetFloatValueNullable(item, config.GetConfigValue(fields[i].Name, "InvariantCulture")));
+                                            reps.Add(count == 0 ? 0 : 1);
+                                            count++;
+                                            rowCount = count;
+                                        }
 
-                                    if (count == 0)
-                                    {
-                                        flData.Add(null);
-                                        reps.Add(0);
+                                        if (count == 0)
+                                        {
+                                            flData.Add(null);
+                                            reps.Add(0);
+                                        }
                                     }
-                                }
-                                rg.WriteColumn(new DataColumn(fields[i], flData.ToArray(), reps.ToArray()));
-                                break;
-                            case DataType.Int16:
-                                var i16Data = new List<Int32?>();
-                                foreach (string col in (string[])csvColumns[i])
-                                {
-                                    int count = 0;
-                                    foreach (string item in col?.Split(csvSep[0]))
+                                    rg.WriteColumn(new DataColumn(fields[i], flData.ToArray(), reps.ToArray()));
+                                    break;
+                                case DataType.Int16:
+                                    var i16Data = new List<Int32?>();
+                                    foreach (string col in (string[])csvColumns[i])
                                     {
-                                        i16Data.Add(GetInt16ValueNullable(item));
-                                        reps.Add(count == 0 ? 0 : 1);
-                                        count++;
-                                    }
+                                        int count = 0;
+                                        foreach (string item in col?.Split(csvSep[0]))
+                                        {
+                                            i16Data.Add(GetInt16ValueNullable(item));
+                                            reps.Add(count == 0 ? 0 : 1);
+                                            count++;
+                                            rowCount = count;
+                                        }
 
-                                    if (count == 0)
-                                    {
-                                        i16Data.Add(null);
-                                        reps.Add(0);
+                                        if (count == 0)
+                                        {
+                                            i16Data.Add(null);
+                                            reps.Add(0);
+                                        }
                                     }
-                                }
-                                // reps: 0 means that this is a start of an array and 1 - it's a value continuation.
-                                rg.WriteColumn(new DataColumn(fields[i], i16Data.ToArray(), reps.ToArray()));
-                                break;
-                            case DataType.Int32:
-                                var i32Data = new List<Int32?>();
-                                foreach (string col in (string[])csvColumns[i])
-                                {
-                                    int count = 0;
-                                    foreach (string item in col?.Split(csvSep[0]))
+                                    // reps: 0 means that this is a start of an array and 1 - it's a value continuation.
+                                    rg.WriteColumn(new DataColumn(fields[i], i16Data.ToArray(), reps.ToArray()));
+                                    break;
+                                case DataType.Int32:
+                                    var i32Data = new List<Int32?>();
+                                    foreach (string col in (string[])csvColumns[i])
                                     {
-                                        i32Data.Add(GetInt32ValueNullable(item));
-                                        reps.Add(count == 0 ? 0 : 1);
-                                        count++;
-                                    }
+                                        int count = 0;
+                                        foreach (string item in col?.Split(csvSep[0]))
+                                        {
+                                            i32Data.Add(GetInt32ValueNullable(item));
+                                            reps.Add(count == 0 ? 0 : 1);
+                                            count++;
+                                            rowCount = count;
+                                        }
 
-                                    if (count == 0)
-                                    {
-                                        i32Data.Add(null);
-                                        reps.Add(0);
+                                        if (count == 0)
+                                        {
+                                            i32Data.Add(null);
+                                            reps.Add(0);
+                                        }
                                     }
-                                }
-                                // reps: 0 means that this is a start of an array and 1 - it's a value continuation.
-                                rg.WriteColumn(new DataColumn(fields[i], i32Data.ToArray(), reps.ToArray()));
-                                break;
-                            case DataType.Int64:
-                                var i64Data = new List<Int64?>();
-                                foreach (string col in (string[])csvColumns[i])
-                                {
-                                    int count = 0;
-                                    foreach (string item in col?.Split(csvSep[0]))
+                                    // reps: 0 means that this is a start of an array and 1 - it's a value continuation.
+                                    rg.WriteColumn(new DataColumn(fields[i], i32Data.ToArray(), reps.ToArray()));
+                                    break;
+                                case DataType.Int64:
+                                    var i64Data = new List<Int64?>();
+                                    foreach (string col in (string[])csvColumns[i])
                                     {
-                                        i64Data.Add(GetInt64ValueNullable(item));
-                                        reps.Add(count == 0 ? 0 : 1);
-                                        count++;
-                                    }
+                                        int count = 0;
+                                        foreach (string item in col?.Split(csvSep[0]))
+                                        {
+                                            i64Data.Add(GetInt64ValueNullable(item));
+                                            reps.Add(count == 0 ? 0 : 1);
+                                            count++;
+                                            rowCount = count;
+                                        }
 
-                                    if (count == 0)
-                                    {
-                                        i64Data.Add(null);
-                                        reps.Add(0);
+                                        if (count == 0)
+                                        {
+                                            i64Data.Add(null);
+                                            reps.Add(0);
+                                        }
                                     }
-                                }
-                                rg.WriteColumn(new DataColumn(fields[i], i64Data.ToArray(), reps.ToArray()));
-                                break;
-                            case DataType.String:
-                                var strData = new List<string>();
-                                foreach (string col in (string[])csvColumns[i])
-                                {
-                                    int count = 0;
+                                    rg.WriteColumn(new DataColumn(fields[i], i64Data.ToArray(), reps.ToArray()));
+                                    break;
+                                case DataType.String:
+                                    var strData = new List<string>();
+                                    foreach (string col in (string[])csvColumns[i])
+                                    {
+                                        int count = 0;
 
-                                    foreach (string item in col?.Split(csvSep[0]))
-                                    {
-                                        // TODO: implement null if needed
-                                        strData.Add(item);
-                                        reps.Add(count == 0 ? 0 : 1);
-                                        count++;
+                                        foreach (string item in col?.Split(csvSep[0]))
+                                        {
+                                            // TODO: implement null if needed
+                                            strData.Add(item);
+                                            reps.Add(count == 0 ? 0 : 1);
+                                            count++;
+                                            rowCount = count;
+                                        }
+
+                                        if (count == 0)
+                                        {
+                                            strData.Add(null);
+                                            reps.Add(0);
+                                        }
                                     }
-                                    
-                                    if (count == 0)
-                                    {
-                                        strData.Add(null);
-                                        reps.Add(0);
-                                    }
-                                }
-                                rg.WriteColumn(new DataColumn(fields[i], strData.ToArray(), reps.ToArray()));
-                                break;
-                            default:
-                                throw new ArgumentOutOfRangeException(fields[i].DataType.ToString());
+                                    rg.WriteColumn(new DataColumn(fields[i], strData.ToArray(), reps.ToArray()));
+                                    break;
+                                default:
+                                    throw new ArgumentOutOfRangeException(fields[i].DataType.ToString());
+                            }
                         }
-                    } else if (fields[i].HasNulls)
-                    {
-                        switch (fields[i].DataType)
+                        else if (fields[i].HasNulls)
                         {
-                            case DataType.Boolean:
-                                rg.WriteColumn(new DataColumn(fields[i], ((bool?[])csvColumns[i])));
-                                break;
-                            case DataType.DateTimeOffset:
-                                rg.WriteColumn(new DataColumn(fields[i], ((DateTimeOffset?[])csvColumns[i])));
-                                break;
-                            case DataType.Decimal:
-                                rg.WriteColumn(new DataColumn(fields[i], ((decimal?[])csvColumns[i])));
-                                break;
-                            case DataType.Double:
-                                rg.WriteColumn(new DataColumn(fields[i], ((double?[])csvColumns[i])));
-                                break;
-                            case DataType.Float:
-                                rg.WriteColumn(new DataColumn(fields[i], ((float?[])csvColumns[i])));
-                                break;
-                            case DataType.Int16:
-                                rg.WriteColumn(new DataColumn(fields[i], ((Int16?[])csvColumns[i])));
-                                break;
-                            case DataType.Int32:
-                                rg.WriteColumn(new DataColumn(fields[i], ((Int32?[])csvColumns[i])));
-                                break;
-                            case DataType.Int64:
-                                rg.WriteColumn(new DataColumn(fields[i], ((Int64?[])csvColumns[i])));
-                                break;
-                            case DataType.String:
-                                rg.WriteColumn(new DataColumn(fields[i], ((string[])csvColumns[i])));
-                                break;
-                            default:
-                                throw new ArgumentOutOfRangeException(fields[i].DataType.ToString());
+                            switch (fields[i].DataType)
+                            {
+                                case DataType.Boolean:
+                                    rg.WriteColumn(new DataColumn(fields[i], ((bool?[])csvColumns[i])));
+                                    break;
+                                case DataType.DateTimeOffset:
+                                    rg.WriteColumn(new DataColumn(fields[i], ((DateTimeOffset?[])csvColumns[i])));
+                                    break;
+                                case DataType.Decimal:
+                                    rg.WriteColumn(new DataColumn(fields[i], ((decimal?[])csvColumns[i])));
+                                    break;
+                                case DataType.Double:
+                                    rg.WriteColumn(new DataColumn(fields[i], ((double?[])csvColumns[i])));
+                                    break;
+                                case DataType.Float:
+                                    rg.WriteColumn(new DataColumn(fields[i], ((float?[])csvColumns[i])));
+                                    break;
+                                case DataType.Int16:
+                                    rg.WriteColumn(new DataColumn(fields[i], ((Int16?[])csvColumns[i])));
+                                    break;
+                                case DataType.Int32:
+                                    rg.WriteColumn(new DataColumn(fields[i], ((Int32?[])csvColumns[i])));
+                                    break;
+                                case DataType.Int64:
+                                    rg.WriteColumn(new DataColumn(fields[i], ((Int64?[])csvColumns[i])));
+                                    break;
+                                case DataType.String:
+                                    rg.WriteColumn(new DataColumn(fields[i], ((string[])csvColumns[i])));
+                                    break;
+                                default:
+                                    throw new ArgumentOutOfRangeException(fields[i].DataType.ToString());
+                            }
                         }
-                    }
-                    else
-                    {
-                        switch (fields[i].DataType)
+                        else
                         {
-                            case DataType.Boolean:
-                                rg.WriteColumn(new DataColumn(fields[i], ((bool[])csvColumns[i])));
-                                break;
-                            case DataType.DateTimeOffset:
-                                rg.WriteColumn(new DataColumn(fields[i], ((DateTimeOffset[])csvColumns[i])));
-                                break;
-                            case DataType.Decimal:
-                                rg.WriteColumn(new DataColumn(fields[i], ((decimal[])csvColumns[i])));
-                                break;
-                            case DataType.Double:
-                                rg.WriteColumn(new DataColumn(fields[i], ((double[])csvColumns[i])));
-                                break;
-                            case DataType.Float:
-                                rg.WriteColumn(new DataColumn(fields[i], ((float[])csvColumns[i])));
-                                break;
-                            case DataType.Int16:
-                                rg.WriteColumn(new DataColumn(fields[i], ((Int16[])csvColumns[i])));
-                                break;
-                            case DataType.Int32:
-                                rg.WriteColumn(new DataColumn(fields[i], ((Int32[])csvColumns[i])));
-                                break;
-                            case DataType.Int64:
-                                rg.WriteColumn(new DataColumn(fields[i], ((Int64[])csvColumns[i])));
-                                break;
-                            case DataType.String:
-                                rg.WriteColumn(new DataColumn(fields[i], ((string[])csvColumns[i])));
-                                break;
-                            default:
-                                throw new ArgumentOutOfRangeException(fields[i].DataType.ToString());
+                            switch (fields[i].DataType)
+                            {
+                                case DataType.Boolean:
+                                    rg.WriteColumn(new DataColumn(fields[i], ((bool[])csvColumns[i])));
+                                    break;
+                                case DataType.DateTimeOffset:
+                                    rg.WriteColumn(new DataColumn(fields[i], ((DateTimeOffset[])csvColumns[i])));
+                                    break;
+                                case DataType.Decimal:
+                                    rg.WriteColumn(new DataColumn(fields[i], ((decimal[])csvColumns[i])));
+                                    break;
+                                case DataType.Double:
+                                    rg.WriteColumn(new DataColumn(fields[i], ((double[])csvColumns[i])));
+                                    break;
+                                case DataType.Float:
+                                    rg.WriteColumn(new DataColumn(fields[i], ((float[])csvColumns[i])));
+                                    break;
+                                case DataType.Int16:
+                                    rg.WriteColumn(new DataColumn(fields[i], ((Int16[])csvColumns[i])));
+                                    break;
+                                case DataType.Int32:
+                                    rg.WriteColumn(new DataColumn(fields[i], ((Int32[])csvColumns[i])));
+                                    break;
+                                case DataType.Int64:
+                                    rg.WriteColumn(new DataColumn(fields[i], ((Int64[])csvColumns[i])));
+                                    break;
+                                case DataType.String:
+                                    rg.WriteColumn(new DataColumn(fields[i], ((string[])csvColumns[i])));
+                                    break;
+                                default:
+                                    throw new ArgumentOutOfRangeException(fields[i].DataType.ToString());
+                            }
                         }
                     }
                 }
+            } catch(Exception e)
+            {
+                e.Data["UserMessage"] += $"Error occured field: {fields[fieldCount].Name} and row: {rowCount + 1} (if array)";
+                throw;
             }
         }
 

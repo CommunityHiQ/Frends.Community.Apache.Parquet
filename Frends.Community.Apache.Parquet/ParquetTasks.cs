@@ -353,17 +353,23 @@ namespace Frends.Community.Apache.Parquet
                         }
 
                         long dataIndex = 0;
+                        int colIndex = 0;
 
                         try
                         {
-                            // Read csv rows
-                            foreach(var row in jsonData)
+                            var converter = new FormattedDecimalConverter(CultureInfo.InvariantCulture);
+
+                            // Read json object
+                            foreach (var row in jsonData)
                             {
                                 // Insert data to structure
                                 for (int i = 0; i < colCount; i++)
                                 {
+                                    colIndex = i;
                                     if (dataFields[i].IsArray)
                                     {
+                                        var type = dataFields[i].DataType;
+
                                         // data must be array
                                         if (row[dataFields[i].Name] != null)
                                         {
@@ -371,7 +377,19 @@ namespace Frends.Community.Apache.Parquet
                                             StringBuilder sb = new StringBuilder("");
                                             foreach (var elem in row[dataFields[i].Name])
                                             {
-                                                sb.Append(elem.ToString());
+                                                if (!String.IsNullOrEmpty(elem.ToString()))
+                                                {
+                                                    if (type == DataType.Decimal || type == DataType.Double || type == DataType.Float)
+                                                    {
+                                                        // converter returns "1.0" and I like to use generic converter.
+                                                        // It also returns "null" for null values.
+                                                        sb.Append(elem.ToString(Formatting.None, converter).Replace("\"", ""));
+                                                    }
+                                                    else
+                                                    {
+                                                        sb.Append(elem.ToString());
+                                                    }
+                                                }
                                                 sb.Append("|");
                                             }
 
@@ -441,7 +459,7 @@ namespace Frends.Community.Apache.Parquet
                                                 ((string[])jsonColumns[i])[dataIndex] = value;
                                                 break;
                                             default:
-                                                throw new ArgumentOutOfRangeException("CSV memory writer: Cannot identify datatype.");
+                                                throw new ArgumentOutOfRangeException("CSV memory writer: Cannot identify datatype. Property: " + dataFields[colIndex].Name);
                                         }
                                         
                                     }
@@ -475,16 +493,13 @@ namespace Frends.Community.Apache.Parquet
                                                 ((DateTimeOffset[])jsonColumns[i])[dataIndex] = Writer.GetDateTimeOffsetValue(value, config.GetConfigValue(dataFields[i].Name));
                                                 break;
                                             case DataType.Decimal:
-                                                ((decimal[])jsonColumns[i])[dataIndex] = decimal.Parse(value);
-                                                    //decimal.Parse(value, Writer.GetCultureInfo(config.GetConfigValue(dataFields[i].Name)));
+                                                ((decimal[])jsonColumns[i])[dataIndex] = decimal.Parse(value);   
                                                 break;
                                             case DataType.Double:
                                                 ((double[])jsonColumns[i])[dataIndex] = double.Parse(value);
-                                                    //double.Parse(value, Writer.GetCultureInfo(config.GetConfigValue(dataFields[i].Name)));
                                                 break;
                                             case DataType.Float:
                                                 ((float[])jsonColumns[i])[dataIndex] = float.Parse(value);
-                                                    //float.Parse(value, Writer.GetCultureInfo(config.GetConfigValue(dataFields[i].Name)));
                                                 break;
                                             case DataType.Int16:
                                                 ((Int16[])jsonColumns[i])[dataIndex] = Int16.Parse(value);
@@ -499,7 +514,7 @@ namespace Frends.Community.Apache.Parquet
                                                 ((string[])jsonColumns[i])[dataIndex] = value;
                                                 break;
                                             default:
-                                                throw new ArgumentOutOfRangeException("CSV memory writer: Cannot identify datatype.");
+                                                throw new ArgumentOutOfRangeException("CSV memory writer: Cannot identify datatype. Property: " + dataFields[colIndex].Name);
                                         }
                                     }
                                 }
@@ -521,7 +536,7 @@ namespace Frends.Community.Apache.Parquet
                         }
                         catch (Exception e)
                         {
-                            throw new Exception($"File processing error in row {dataIndex + 1}", e);
+                            throw new Exception($"File processing error in row {dataIndex + 1}, property: {dataFields[colIndex].Name}", e);
                         }
 
                         // Write non-empty data structure
