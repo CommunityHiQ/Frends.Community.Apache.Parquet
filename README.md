@@ -1,3 +1,5 @@
+This repository is archived and the task has been moved to https://github.com/CommunityHiQ/Frends.Community.Apache
+
 # Frends.Community.Apache.Parquet
 
 FRENDS Community Task for Apache Parquet related operations.
